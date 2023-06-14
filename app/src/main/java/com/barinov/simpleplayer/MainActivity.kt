@@ -28,9 +28,14 @@ fun DefaultPreview(){
             TopAppBar (
                 title = { Text(text = "Hey") },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(
-                    containerColor = Color(0xFF1633D8)
+                    containerColor = Color(0xFF0F2BCF)
                 )
             )
+        },
+        bottomBar = {
+            BottomAppBar() {
+
+            }
         }
     ) {
 
