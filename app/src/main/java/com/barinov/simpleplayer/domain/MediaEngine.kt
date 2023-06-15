@@ -7,6 +7,7 @@ import android.media.audiofx.EnvironmentalReverb
 import com.barinov.simpleplayer.prefs.PreferencesManager
 import java.io.File
 import java.util.Queue
+import java.util.Random
 import java.util.concurrent.LinkedTransferQueue
 
 class MediaEngine(
@@ -26,6 +27,7 @@ class MediaEngine(
         }
     }
 
+    private var currentPlaylistId: String? = null
     private val musicToPlay = mutableListOf<File>()
     private var musicFileIterator = musicToPlay.listIterator()
     private var repeatType = RepeatType.values()[preferencesManager.repeatTypeOrdinal]
@@ -40,8 +42,12 @@ class MediaEngine(
 
 
     suspend fun startMusic(
+        playlistId: String,
         musicFiles: List<File>
     ) {
+        if(musicToPlay.isNotEmpty()){
+            musicToPlay.clear()
+        }
         mediaPlayer.duration
         mediaPlayer.currentPosition
         if (musicFiles.isNotEmpty()) {
@@ -57,17 +63,52 @@ class MediaEngine(
 
     private fun onCompleteTrack() {
         if (!mediaPlayer.isLooping) {
-            if (musicFileIterator.hasNext()) {
-                setDataSource(musicFileIterator.next())
-            } else {
-                if (repeatType == RepeatType.PLAYLIST) {
-                    musicFileIterator = musicToPlay.listIterator()
-                    setDataSource(musicFileIterator.next())
-                } else {
-                    mediaPlayer.reset()
+            when(repeatType){
+                RepeatType.NONE -> {
+                    if (musicFileIterator.hasNext()) {
+                        setDataSource(musicFileIterator.next())
+                    } else {
+                        mediaPlayer.reset()
+                    }
+                }
+                RepeatType.PLAYLIST -> {
+                    if (musicFileIterator.hasNext()) {
+                        setDataSource(musicFileIterator.next())
+                    } else {
+                        musicFileIterator = musicToPlay.listIterator()
+                        mediaPlayer.reset()
+                        setDataSource(musicFileIterator.next())
+                    }
+                }
+                RepeatType.ONE -> {
+                    if(!mediaPlayer.isLooping){
+                        throw IllegalStateException()
+                    }
+                }
+                RepeatType.RANDOM -> {
+                    val random = Random()
+
                 }
             }
         }
+    }
+
+
+    fun checkPlaylists(playlistId: String) = currentPlaylistId == playlistId
+
+    fun playSelectedDirectly(selectedTrack: File){
+
+    }
+
+    fun nextTrack(){
+        mediaPlayer.apply {
+            pause()
+
+        }
+    }
+
+    fun release(){
+        mediaPlayer.release()
     }
 
     fun pause() {
