@@ -6,12 +6,15 @@ import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.IBinder
 import android.support.v4.media.session.PlaybackStateCompat
+import com.barinov.simpleplayer.domain.MediaSessionAdapter
+import org.koin.android.ext.android.inject
 
 
 class PlayerMediaService : Service() {
 
 
     private val mediaSession by lazy { MediaSession(this, "SimplePlayer") }
+    private val mediaSessionAdapter: MediaSessionAdapter by inject()
     private val playBackState = PlaybackState.Builder().setActions(
             PlaybackState.ACTION_PLAY
                 or PlaybackState.ACTION_STOP

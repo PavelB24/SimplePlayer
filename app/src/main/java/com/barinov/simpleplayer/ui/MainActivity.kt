@@ -1,4 +1,4 @@
-package com.barinov.simpleplayer
+package com.barinov.simpleplayer.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
