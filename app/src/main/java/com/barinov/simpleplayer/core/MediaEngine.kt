@@ -3,15 +3,24 @@ package com.barinov.simpleplayer.core
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import com.barinov.simpleplayer.domain.RepeatType
+import com.barinov.simpleplayer.domain.TrackRemover
 import com.barinov.simpleplayer.domain.model.MusicFile
 import com.barinov.simpleplayer.indexOrNull
 import com.barinov.simpleplayer.prefs.PreferencesManager
 import com.barinov.simpleplayer.musicFileIterator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.Random
 
 class MediaEngine(
     private val preferencesManager: PreferencesManager
-) {
+) : TrackRemover {
 
     private val mediaPlayer = MediaPlayer().apply {
         setAudioAttributes(
@@ -30,6 +39,10 @@ class MediaEngine(
     private var musicFileIterator = musicToPlay.musicFileIterator()
     private var repeatType = RepeatType.values()[preferencesManager.repeatTypeOrdinal]
 
+    private val _filesEventFlow = MutableSharedFlow<PlayerEvents>()
+    private val filesEventFlow = _filesEventFlow.asSharedFlow()
+    private val playerScope = CoroutineScope(Job() + Dispatchers.IO)
+    private val mutex = Mutex()
 
     private fun setDataSource(
         musicFile: MusicFile
@@ -44,7 +57,7 @@ class MediaEngine(
         startMusic(listOf(musicFile), musicFile.id)
     }
 
-    fun getCurrentTrackId(): String? = musicFileIterator.getCurrentTrackId()
+    override fun getCurrentTrackId(): String? = musicFileIterator.getCurrentTrackId()
 
 
     fun startMusic(
@@ -53,7 +66,7 @@ class MediaEngine(
     ) {
         mediaPlayer.reset()
         if (checkPlaylists(musicFiles.firstOrNull()?.playlistId)) {
-            if(musicFileIterator.getCurrentTrackId() == startId){
+            if (musicFileIterator.getCurrentTrackId() == startId) {
                 start()
             } else {
                 val startFrom = musicToPlay.indexOrNull {
@@ -68,7 +81,11 @@ class MediaEngine(
                     it.setCurrentPosition(musicToPlay.indexOrNull { it.id == startId } ?: 0)
                 }
                 mediaPlayer.setOnCompletionListener {
-                    onCompleteTrack()
+                    playerScope.launch {
+                        mutex.withLock {
+                            onCompleteTrack()
+                        }
+                    }
                 }
                 setDataSource(musicFileIterator.next())
                 mediaPlayer.start()
@@ -121,7 +138,7 @@ class MediaEngine(
 
 
     fun nextTrack() {
-        if(musicToPlay.isNotEmpty()) {
+        if (musicToPlay.isNotEmpty()) {
             if (mediaPlayer.isPlaying) {
                 mediaPlayer.pause()
             }
@@ -135,8 +152,8 @@ class MediaEngine(
         }
     }
 
-    fun previousTrack(){
-        if(musicToPlay.isNotEmpty()) {
+    fun previousTrack() {
+        if (musicToPlay.isNotEmpty()) {
             if (mediaPlayer.isPlaying) {
                 mediaPlayer.pause()
             }
@@ -164,12 +181,12 @@ class MediaEngine(
     }
 
 
-    private fun resetList(){
+    private fun resetList() {
         musicToPlay = listOf()
         musicFileIterator = musicToPlay.musicFileIterator()
     }
 
-    fun stop(){
+    fun stop() {
         mediaPlayer.stop()
         mediaPlayer.reset()
         resetList()
@@ -181,7 +198,9 @@ class MediaEngine(
         preferencesManager.repeatTypeOrdinal = repeatType.ordinal
         when (repeatType) {
             RepeatType.ONE -> setTrackRepeat(true)
-            else -> {setTrackRepeat(false)}
+            else -> {
+                setTrackRepeat(false)
+            }
         }
 
     }
@@ -189,6 +208,38 @@ class MediaEngine(
     private fun setTrackRepeat(repeat: Boolean) {
         mediaPlayer.isLooping = repeat
     }
+
+    override fun deleteFromCurrentPlayBack(mFile: MusicFile) {
+        playerScope.launch {
+            mutex.withLock {
+                if (musicFileIterator.getCurrentPlaylistId() != mFile.playlistId) {
+                    return@launch
+                } else {
+                    val currPos = musicFileIterator.getCurrentPosition()
+                    if (mFile.id == getCurrentTrackId()) {
+                        mediaPlayer.stop()
+                    }
+                    if (musicToPlay.size > 1) {
+                        musicToPlay = musicToPlay.toMutableList().also { it.removeAt(currPos) }
+                        musicFileIterator = musicToPlay.musicFileIterator()
+                            .also { it.setCurrentPosition(if (currPos >= musicToPlay.size) currPos else currPos - 1) }
+                        if (musicFileIterator.hasNext()) {
+                            nextTrack()
+                        } else {
+                            previousTrack()
+                        }
+                    } else {
+                        resetList()
+                    }
+                }
+            }
+        }
+    }
+
+    sealed class PlayerEvents(){
+        data class PlayingStarted(val trackId: String): PlayerEvents()
+    }
+
 
 
 }

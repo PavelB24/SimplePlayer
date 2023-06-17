@@ -15,14 +15,6 @@ class PlayerMediaService : Service() {
 
     private val mediaSession by lazy { MediaSession(this, "SimplePlayer") }
     private val mediaSessionAdapter: MediaSessionAdapter by inject()
-    private val playBackState = PlaybackState.Builder().setActions(
-            PlaybackState.ACTION_PLAY
-                or PlaybackState.ACTION_STOP
-                or PlaybackState.ACTION_PAUSE
-                or PlaybackState.ACTION_PLAY_PAUSE
-                or PlaybackState.ACTION_SKIP_TO_NEXT
-                or PlaybackState.ACTION_SKIP_TO_PREVIOUS
-    )
 
     override fun onBind(intent: Intent?): IBinder? {
         TODO("Not yet implemented")

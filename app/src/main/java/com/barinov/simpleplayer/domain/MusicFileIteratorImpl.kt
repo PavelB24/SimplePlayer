@@ -2,7 +2,7 @@ package com.barinov.simpleplayer.domain
 
 import com.barinov.simpleplayer.domain.model.MusicFile
 
-class RandomAccessIteratorImpl(list: List<MusicFile>) : MusicFileIterator(list) {
+class MusicFileIteratorImpl(list: List<MusicFile>) : MusicFileIterator(list) {
 
     init {
         currentTrackId = list[0].id

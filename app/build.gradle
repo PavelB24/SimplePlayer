@@ -56,6 +56,8 @@ dependencies {
     implementation("io.insert-koin:koin-android:3.3.2")
     implementation ("io.insert-koin:koin-core:3.3.2")
 
+    implementation 'me.jahnen.libaums:core:0.10.0'
+
     implementation 'androidx.media:media:1.6.0'
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'

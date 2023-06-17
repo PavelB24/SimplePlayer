@@ -8,6 +8,7 @@ import android.media.MediaPlayer
 import android.media.browse.MediaBrowser
 import android.service.media.MediaBrowserService
 import com.barinov.simpleplayer.BuildConfig
+import com.barinov.simpleplayer.domain.model.MusicFileMetaData
 import java.io.File
 
 class AudioDataHandler {
@@ -21,8 +22,8 @@ class AudioDataHandler {
                 setDataSource(musicFile.path)
                 retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toInt()
             }
-        } catch (e: Exception){
-            if(BuildConfig.DEBUG){
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) {
                 e.printStackTrace()
             }
             null
@@ -30,14 +31,18 @@ class AudioDataHandler {
     }
 
 
-    fun getMusicFileMetaData(musicFile: File){
-        retriever.setDataSource(musicFile.path)
-        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
-        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
-        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
-        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE)
-        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE)
+    fun getMusicFileMetaData(musicFile: File): MusicFileMetaData {
+        return retriever.run {
+            setDataSource(musicFile.path)
+            MusicFileMetaData(
+                extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM),
+                extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST),
+                extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE),
+                extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong(),
+                extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE),
+                extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE)
+            )
+        }
     }
 
 }
