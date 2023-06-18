@@ -39,8 +39,8 @@ class MediaEngine(
     private var musicFileIterator = musicToPlay.musicFileIterator()
     private var repeatType = RepeatType.values()[preferencesManager.repeatTypeOrdinal]
 
-    private val _filesEventFlow = MutableSharedFlow<PlayerEvents>()
-    private val filesEventFlow = _filesEventFlow.asSharedFlow()
+//    private val _playerEventFlow = MutableSharedFlow<PlayerEvents>()
+//    private val playerEventFlow = _playerEventFlow.asSharedFlow()
     private val playerScope = CoroutineScope(Job() + Dispatchers.IO)
     private val mutex = Mutex()
 
@@ -51,13 +51,17 @@ class MediaEngine(
         mediaPlayer.prepare()
     }
 
+    override fun getCurrentPosition() = musicFileIterator.getCurrentPosition()
+
     fun startMusic(
         musicFile: MusicFile
     ) {
         startMusic(listOf(musicFile), musicFile.id)
     }
 
-    override fun getCurrentTrackId(): String? = musicFileIterator.getCurrentTrackId()
+    override fun getCurrentTrackId(): String? = musicFileIterator.currentTrackId
+
+
 
 
     fun startMusic(
@@ -66,7 +70,7 @@ class MediaEngine(
     ) {
         mediaPlayer.reset()
         if (checkPlaylists(musicFiles.firstOrNull()?.playlistId)) {
-            if (musicFileIterator.getCurrentTrackId() == startId) {
+            if (musicFileIterator.currentTrackId == startId) {
                 start()
             } else {
                 val startFrom = musicToPlay.indexOrNull {
@@ -89,16 +93,21 @@ class MediaEngine(
                 }
                 setDataSource(musicFileIterator.next())
                 mediaPlayer.start()
+//                playerScope.launch {
+//                    _playerEventFlow.emit(PlayerEvents.PlayingStarted(getCurrentTrackId()))
+//                }
             }
         }
     }
 
-    private fun onCompleteTrack() {
+    private suspend fun onCompleteTrack() {
         if (!mediaPlayer.isLooping) {
             when (repeatType) {
                 RepeatType.NONE -> {
                     if (musicFileIterator.hasNext()) {
                         setDataSource(musicFileIterator.next())
+                        mediaPlayer.start()
+//                        _playerEventFlow.emit(PlayerEvents.PlayingStarted(getCurrentTrackId()))
                     } else {
                         mediaPlayer.reset()
                         resetList()
@@ -134,7 +143,7 @@ class MediaEngine(
 
 
     private fun checkPlaylists(playlistId: String?) =
-        musicFileIterator.getCurrentPlaylistId() == playlistId
+        musicFileIterator.currentPlayListId == playlistId
 
 
     fun nextTrack() {
@@ -171,12 +180,15 @@ class MediaEngine(
         mediaPlayer.release()
     }
 
-    fun pause() {
+    override fun pause() {
         if (mediaPlayer.isPlaying) mediaPlayer.pause()
+//        playerScope.launch {
+//            _playerEventFlow.emit(PlayerEvents.PlayPaused(getCurrentTrackId()))
+//        }
     }
 
 
-    fun start() {
+    override fun start() {
         if (!mediaPlayer.isPlaying) mediaPlayer.start()
     }
 
@@ -186,8 +198,11 @@ class MediaEngine(
         musicFileIterator = musicToPlay.musicFileIterator()
     }
 
-    fun stop() {
+    override fun stop() {
         mediaPlayer.stop()
+//        playerScope.launch {
+//            _playerEventFlow.emit(PlayerEvents.PlayStopped)
+//        }
         mediaPlayer.reset()
         resetList()
     }
@@ -212,7 +227,7 @@ class MediaEngine(
     override fun deleteFromCurrentPlayBack(mFile: MusicFile) {
         playerScope.launch {
             mutex.withLock {
-                if (musicFileIterator.getCurrentPlaylistId() != mFile.playlistId) {
+                if (musicFileIterator.currentPlayListId != mFile.playlistId) {
                     return@launch
                 } else {
                     val currPos = musicFileIterator.getCurrentPosition()
@@ -236,9 +251,13 @@ class MediaEngine(
         }
     }
 
-    sealed class PlayerEvents(){
-        data class PlayingStarted(val trackId: String): PlayerEvents()
-    }
+//    sealed class PlayerEvents(){
+//        data class PlayingStarted(val trackId: String?): PlayerEvents()
+//
+//        data class  PlayPaused(val trackId: String?): PlayerEvents()
+//
+//        object PlayStopped: PlayerEvents()
+//    }
 
 
 

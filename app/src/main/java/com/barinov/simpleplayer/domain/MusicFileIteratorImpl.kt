@@ -5,8 +5,10 @@ import com.barinov.simpleplayer.domain.model.MusicFile
 class MusicFileIteratorImpl(list: List<MusicFile>) : MusicFileIterator(list) {
 
     init {
-        currentTrackId = list[0].id
-        currentPlayListId = list[0].playlistId
+        if(list.isNotEmpty()) {
+            currentTrackId = list[0].id
+            currentPlayListId = list[0].playlistId
+        }
     }
 
     override fun setCurrentPosition(position: Int) {

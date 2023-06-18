@@ -7,12 +7,13 @@ abstract class MusicFileIterator(protected val list: List<MusicFile>): RandomAcc
 
     protected var head: Int = 0
 
-    protected var currentTrackId: String? = null
-    protected var currentPlayListId: String? = null
+     var currentTrackId: String? = null
+        protected set
+
+     var currentPlayListId: String? = null
+         protected set
 
 
-    fun getCurrentTrackId(): String? = currentTrackId
 
-    fun getCurrentPlaylistId(): String? = currentPlayListId
 
 }

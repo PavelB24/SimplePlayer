@@ -35,6 +35,8 @@ class AudioDataHandler {
         return retriever.run {
             setDataSource(musicFile.path)
             MusicFileMetaData(
+                extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) ?: "Unknown",
+                embeddedPicture,
                 extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM),
                 extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST),
                 extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE),
