@@ -1,5 +1,6 @@
 package com.barinov.simpleplayer.ui
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.ContextCompat
 import com.barinov.simpleplayer.core.MediaController
 import com.barinov.simpleplayer.service.PlayerMediaService
 import com.barinov.simpleplayer.ui.theme.SimplePlayerTheme
@@ -25,7 +27,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             DefaultPreview()
         }
-        startForegroundService(Intent(this, PlayerMediaService::class.java))
+        startService(Intent(this, PlayerMediaService::class.java))
     }
 
     @OptIn(ExperimentalMaterial3Api::class)

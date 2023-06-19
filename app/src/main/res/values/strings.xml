@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">SimplePlayer</string>
+    <string name="notification_channel">Player control</string>
+    <string name="previous">Player control</string>
+    <string name="next">Player control</string>
+    <string name="pause">Player control</string>
+    <string name="start">Player control</string>
+    <string name="stop">Player control</string>
 </resources>

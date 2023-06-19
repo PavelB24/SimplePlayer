@@ -1,10 +1,11 @@
 package com.barinov.simpleplayer.domain
 
 import android.media.session.MediaSession
+import android.support.v4.media.session.MediaSessionCompat
 import com.barinov.simpleplayer.core.MediaController
 import kotlinx.coroutines.flow.SharedFlow
 
-abstract class MediaControl(): MediaSession.Callback(){
+abstract class MediaControl(): MediaSessionCompat.Callback(){
 
     protected var onStatusChanged: ((Int) -> Unit)? = null
 

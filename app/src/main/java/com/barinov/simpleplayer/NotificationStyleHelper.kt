@@ -1,23 +1,23 @@
 package com.barinov.simpleplayer
 
-import android.app.Notification
 import android.content.Context
-import android.media.session.MediaSession
+import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import androidx.core.app.NotificationCompat
 import androidx.media.session.MediaButtonReceiver
-import com.barinov.simpleplayer.broadcastReceivers.MediaButtonSignalReceiver
 
 object NotificationStyleHelper {
 
-    fun from(channelId: String,
-             context: Context,  mediaSession: MediaSession
-    ): Notification.Builder {
+    fun from(
+        channelId: String,
+        context: Context, mediaSession: MediaSessionCompat
+    ): NotificationCompat.Builder {
         val controller = mediaSession.controller
         val mediaMetadata = controller.metadata
         val description = mediaMetadata?.description
 
 
-        return Notification.Builder(context, channelId).apply {
+        return NotificationCompat.Builder(context, channelId).apply {
             setContentTitle(description?.title)
             setContentText(description?.subtitle)
             setSubText(description?.description)
@@ -29,9 +29,9 @@ object NotificationStyleHelper {
                     PlaybackStateCompat.ACTION_STOP
                 )
             )
-                setVisibility(Notification.VISIBILITY_PUBLIC)
-
+            setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
         }
     }
+
 
 }

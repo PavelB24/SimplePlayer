@@ -7,6 +7,9 @@ import android.media.AudioManager
 import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import com.barinov.simpleplayer.domain.MediaControl
 import com.barinov.simpleplayer.domain.MusicRepository
 import com.barinov.simpleplayer.domain.Player
@@ -21,16 +24,16 @@ class MediaController(
     context: Context,
     private val mediaEngine: Player,
     private val trackRepository: MusicRepository,
-    private val mediaSession: MediaSession,
+    private val mediaSession: MediaSessionCompat,
 ) : MediaControl() {
 
-    private val playBackState = PlaybackState.Builder().setActions(
-        PlaybackState.ACTION_PLAY
-                or PlaybackState.ACTION_STOP
-                or PlaybackState.ACTION_PAUSE
-                or PlaybackState.ACTION_PLAY_PAUSE
-                or PlaybackState.ACTION_SKIP_TO_NEXT
-                or PlaybackState.ACTION_SKIP_TO_PREVIOUS
+    private val playBackState = PlaybackStateCompat.Builder().setActions(
+        PlaybackStateCompat.ACTION_PLAY
+                or PlaybackStateCompat.ACTION_STOP
+                or PlaybackStateCompat.ACTION_PAUSE
+                or PlaybackStateCompat.ACTION_PLAY_PAUSE
+                or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
     )
 
     private val audioManager = context.getSystemService(AudioManager::class.java)
@@ -59,7 +62,7 @@ class MediaController(
         currTrack?.let {
             handlerScope.launch {
                 trackRepository.getTrackDataById(it)?.let { data ->
-                    val metaData = MediaMetadata.Builder().run {
+                    val metaData = MediaMetadataCompat.Builder().run {
                         putString(MediaMetadata.METADATA_KEY_TITLE, data.title)
                         putString(MediaMetadata.METADATA_KEY_ALBUM, data.album)
                         putString(MediaMetadata.METADATA_KEY_ARTIST, data.artist)
@@ -84,7 +87,7 @@ class MediaController(
     private fun setPause() {
         mediaSession.setPlaybackState(
             playBackState.setState(
-                PlaybackState.STATE_PAUSED,
+                PlaybackStateCompat.STATE_PAUSED,
                 mediaEngine.getCurrentPosition().toLong(), 1f
             ).build()
         )
@@ -98,7 +101,7 @@ class MediaController(
             it.isActive = true
             it.setPlaybackState(
                 playBackState.setState(
-                    PlaybackState.STATE_PLAYING,
+                    PlaybackStateCompat.STATE_PLAYING,
                     mediaEngine.getCurrentPosition().toLong(), 1f
                 ).build()
             )
@@ -109,15 +112,15 @@ class MediaController(
     private fun setStop() {
         mediaSession.setPlaybackState(
             playBackState.setState(
-                PlaybackState.STATE_STOPPED,
+                PlaybackStateCompat.STATE_STOPPED,
                 PlaybackState.PLAYBACK_POSITION_UNKNOWN, 1f
             ).build()
         )
     }
 
-    fun setNext() {}
+    private fun setNext() {}
 
-    fun setPrev() {}
+    private fun setPrev() {}
 
 
     override fun onPause() {
