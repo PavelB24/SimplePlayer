@@ -3,7 +3,6 @@ package com.barinov.simpleplayer.domain
 import android.content.Context
 import android.content.ContextWrapper
 import com.barinov.simpleplayer.copyWithCallBack
-import com.barinov.simpleplayer.core.MediaEngine
 import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.domain.model.MusicFile
 import com.barinov.simpleplayer.toCommonFileItem
@@ -74,7 +73,7 @@ class CoroutineFileWorker(
                     }
                 }
             } else {
-                file.uFile?.apply {
+                file.uEntity?.apply {
                     if (!copyOnInternalStorage) throw IllegalArgumentException()
                     if (!uFile.isDirectory) {
                         if (uFile.name.endsWith(".mp3")) {
@@ -135,7 +134,7 @@ class CoroutineFileWorker(
             }
         } else {
             if(!copyOnInternalStorage) throw IllegalArgumentException()
-            musicFile.uFile?.apply {
+            musicFile.uEntity?.apply {
                 onExternalCopy(uFile, fs, playListName)
             }
         }
@@ -207,7 +206,7 @@ class CoroutineFileWorker(
                         }
                     }
                 } else {
-                    musicFile.uFile?.apply {
+                    musicFile.uEntity?.apply {
                         if (!uFile.isDirectory) throw IllegalArgumentException()
                         uFile.listFiles().forEach {
                             onExternalCopy(it, fs, playListName)
@@ -220,7 +219,7 @@ class CoroutineFileWorker(
     }
 
     private suspend fun onExternalCopy(usbFile: UsbFile, fs: FileSystem, playListName: String?){
-        val finalPath = copyExternal(usbFile.toCommonFileItem(fs).uFile!!)
+        val finalPath = copyExternal(usbFile.toCommonFileItem(fs).uEntity!!)
         val metadata = audioDataHandler.getMusicFileMetaData(File(finalPath))
         musicRepository.addFileIndex(metadata, finalPath, playListName)
     }

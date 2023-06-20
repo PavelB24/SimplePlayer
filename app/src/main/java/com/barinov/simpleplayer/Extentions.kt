@@ -113,10 +113,37 @@ fun NotificationCompat.Builder.completeStyling(
         setChannelId(PlayerMediaService.NOTIFICATION_CHANNEL_NAME)
     }
 }
+
+fun CommonFileItem.isFile(): Boolean{
+    return if(rootType == CoroutineFileWorker.RootType.INTERNAL){
+        iFile!!.isFile
+    } else {
+        uEntity!!.uFile.isDirectory
+    }
+}
+
+fun CommonFileItem.getSize(): Long{
+    return if(rootType == CoroutineFileWorker.RootType.INTERNAL){
+        iFile!!.length()
+    } else {
+        uEntity!!.uFile.length
+    }
+}
+
+fun Long.sizeBytesToMb(): String{
+    return "${this / (1024.0 * 1024.0)}.mb"
+}
+
+fun CommonFileItem.getName(): String{
+    return if(rootType == CoroutineFileWorker.RootType.INTERNAL){
+        iFile!!.name
+    } else uEntity!!.uFile.name
+}
+
 suspend inline fun InputStream.copyWithCallBack(
     out: OutputStream,
     bufferSize: Int = DEFAULT_BUFFER_SIZE,
-    onBlockCopied: suspend (Long) -> Unit
+    onBlockCopied:  (Long) -> Unit
 ): Long {
     var bytesCopied: Long = 0
     val buffer = ByteArray(bufferSize)

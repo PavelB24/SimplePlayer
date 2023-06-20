@@ -8,11 +8,12 @@ import java.io.File
 data class CommonFileItem(
     val rootType: CoroutineFileWorker.RootType,
     val iFile: File?,
-    val uFile: UsbData?
+    val uEntity: UsbData?
 ){
     data class UsbData(
         val uFile: UsbFile,
         val fs: FileSystem
 
     )
+
 }
