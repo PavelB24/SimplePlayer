@@ -9,7 +9,9 @@ import com.barinov.simpleplayer.data.LocalDataBase
 import com.barinov.simpleplayer.domain.MusicRepository
 import com.barinov.simpleplayer.domain.Player
 import com.barinov.simpleplayer.prefs.PreferencesManager
+import com.barinov.simpleplayer.ui.viewModel.FileBrowserViewModel
 import org.koin.android.ext.koin.androidApplication
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 const val SHARED_PREFS_NAME = "simple_player_prefs"
@@ -39,6 +41,10 @@ val module = module {
 
     single { holder->
         MediaController(androidApplication(), get<MediaEngine>() as Player, get(), holder.get())
+    }
+
+    viewModel {
+        FileBrowserViewModel()
     }
 
 }

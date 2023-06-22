@@ -56,7 +56,7 @@ fun FileItem(item: CommonFileItem, interactor: ItemInteractor<CommonFileItem>){
                     textAlign = TextAlign.Center
                 ),//here is style
                 fontSize = 28.sp,
-                modifier =  Modifier.padding(20.dp, 0.dp, 0.dp, 0.dp)
+                modifier =  Modifier.padding(start = 20.dp)
             )
             Spacer(modifier = Modifier.weight(1f))
             AnimatedVisibility(visible = isFile) {
@@ -75,7 +75,9 @@ fun FileItem(item: CommonFileItem, interactor: ItemInteractor<CommonFileItem>){
 
 @Composable
 fun FileEntityItem(isFile: Boolean){
-    Image(painter = painterResource(id =  if (isFile) com.barinov.simpleplayer.R.drawable.file else com.barinov.simpleplayer.R.drawable.folder),
+    Image(painter = painterResource(
+        id = (if (isFile) com.barinov.simpleplayer.R.drawable.file
+        else com.barinov.simpleplayer.R.drawable.folder)),
         contentDescription = null,
         contentScale = ContentScale.Crop,
         modifier = Modifier.padding(10.dp)
