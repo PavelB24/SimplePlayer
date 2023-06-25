@@ -3,8 +3,13 @@ package com.barinov.simpleplayer.broadcastReceivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.barinov.simpleplayer.domain.MassStorageProvider
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import me.jahnen.libaums.core.fs.UsbFile
 
-class UsbEventsBroadcastReceiver: BroadcastReceiver() {
+class UsbEventsBroadcastReceiver: BroadcastReceiver(), MassStorageProvider {
 
 
     companion object {
@@ -13,7 +18,23 @@ class UsbEventsBroadcastReceiver: BroadcastReceiver() {
         const val ACTION_USB_STATE_KEY = "connect_state"
     }
 
+    private val _mssStorageDeviceAccessibilityFlow =
+        MutableStateFlow<MassStorageProvider.MassStorageState>(
+            MassStorageProvider.MassStorageState.NotReady
+        )
+
+    override fun openFolder(uFile: UsbFile?) {
+        TODO("Not yet implemented")
+    }
+
+    override val mssStorageDeviceAccessibilityFlow = _mssStorageDeviceAccessibilityFlow.asSharedFlow()
+
     override fun onReceive(context: Context?, intent: Intent?) {
         TODO("Not yet implemented")
     }
+
+
+
+
+
 }

@@ -5,6 +5,8 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.app.PendingIntent.FLAG_MUTABLE
 import android.content.Intent
 import android.media.browse.MediaBrowser
 import android.media.session.PlaybackState
@@ -115,7 +117,7 @@ class PlayerMediaService : MediaBrowserService() {
                     Intent(
                         Intent.ACTION_MEDIA_BUTTON, null, this, MediaButtonReceiver::class.java
                     ),
-                    0
+                    FLAG_IMMUTABLE
                 )
             )
 //            }
@@ -127,7 +129,7 @@ class PlayerMediaService : MediaBrowserService() {
                         this,
                         MainActivity::class.java
                     ),
-                    0
+                    FLAG_IMMUTABLE
                 )
             )
         }

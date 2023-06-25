@@ -1,17 +1,25 @@
 package com.barinov.simpleplayer.ui
 
+import android.graphics.drawable.VectorDrawable
+import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
+
+
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
-import com.barinov.simpleplayer.base.DialogButtonActions
-import org.koin.androidx.compose.inject
 
 @Composable
 fun AlertdialogComponent(
@@ -55,45 +63,70 @@ fun AlertDialogMainBlock(
     }
 }
 
-@Composable
-fun AlertDialogButtonsBlock(){
-    Row() {
-        ElevatedButton(onClick = { /*TODO*/ }) {
-            
-        }
-        Spacer(modifier = Modifier.width(26.dp))
-        ElevatedButton(onClick = { /*TODO*/ }) {
+//@Composable
+//fun AlertDialogButtonsBlock(
+//    onClick: DialogButtonActionsWithCheckBox<Boolean>,
+//    checkState: Boolean
+//){
+//    Row() {
+//        ElevatedButton(onClick = {
+//            onClick.onPositiveButtonClicked(checkState)
+//        }) {
+//            Text(text = stringResource(id = android.R.string.cancel))
+//        }
+//
+//        Spacer(modifier = Modifier.width(26.dp))
+//
+//        ElevatedButton(onClick = {
+//            onClick.onPositiveButtonClicked(checkState)
+//        }) {
+//            Text(text = stringResource(id = android.R.string.ok))
+//        }
+//    }
+//}
 
-        }
+
+
+@Composable
+fun MenuImageButton(
+    image: ImageVector,
+    onClick: () -> Unit
+){
+    IconButton(onClick = { onClick.invoke()}) {
+        Icon(image, "")
     }
 }
 
-
 @Composable
-fun DropDownList(
-    requestToOpen: Boolean = false,
-    refs: Array<Int>,
-    request: (Boolean) -> Unit,
-    selectedId: (Int) -> Unit
+fun ExpandedMenu(
+    refs: Array<Int>, //strings
+    onClick: (Int) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(requestToOpen) }
+    Log.d("@@@", "MENU")
+    var expanded by remember { mutableStateOf(false) }
     Box {
-        TextButton(onClick = { expanded = !expanded }) {
-            Text("DropDown")
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            refs.forEach { label ->
-                DropdownMenuItem(
-                    onClick = {
-                        expanded = false
-                        selectedId(label)
-                    },
-                    text = { Text(stringResource(id = label)) }
-                )
+        AnimatedVisibility(visible = refs.isNotEmpty()) {
+            IconButton(onClick = {
+                expanded = !expanded
+            }
+            ) {
+                Icon(Icons.Default.MoreVert, "", tint = Color(0xDDDDDDDD))
+//            Text("DropDown")
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+//            modifier = Modifier.fillMaxWidth()
+            ) {
+                refs.forEach { label ->
+                    DropdownMenuItem(
+                        onClick = {
+                            expanded = false
+                            onClick(label)
+                        }) {
+                        Text(stringResource(id = label))
+                    }
+                }
             }
         }
     }

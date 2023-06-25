@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.barinov.simpleplayer.domain.model.MusicFileMetadataEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MusicTracksDao {
@@ -18,5 +19,8 @@ interface MusicTracksDao {
 
     @Query("SELECT * FROM tracks WHERE id =:id limit 1")
     suspend fun getTrackById(id: String): MusicFileMetadataEntity?
+
+    @Query("SELECT COUNT(*) FROM tracks")
+    fun getTracksCountFlow(): Flow<Int>
 
 }

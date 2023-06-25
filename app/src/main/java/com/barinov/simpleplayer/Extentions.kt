@@ -7,9 +7,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.media.session.MediaButtonReceiver
-import com.barinov.simpleplayer.domain.CoroutineFileWorker
 import com.barinov.simpleplayer.domain.MusicFileIterator
 import com.barinov.simpleplayer.domain.MusicFileIteratorImpl
+import com.barinov.simpleplayer.domain.RootType
 import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.domain.model.MusicFile
 import com.barinov.simpleplayer.service.PlayerMediaService
@@ -36,10 +36,10 @@ inline fun <T> List<T>.indexOrNull(predicate: (T) -> Boolean): Int? {
 }
 
 fun File.toCommonFileItem() =
-    CommonFileItem(CoroutineFileWorker.RootType.INTERNAL, this, null)
+    CommonFileItem(RootType.INTERNAL, this, null)
 
 fun UsbFile.toCommonFileItem(fs: FileSystem) =
-    CommonFileItem(CoroutineFileWorker.RootType.USB, null, CommonFileItem.UsbData(this, fs))
+    CommonFileItem(RootType.USB, null, CommonFileItem.UsbData(this, fs))
 
 fun NotificationCompat.Builder.completeStyling(
     context: Context,
@@ -115,7 +115,7 @@ fun NotificationCompat.Builder.completeStyling(
 }
 
 fun CommonFileItem.isFile(): Boolean{
-    return if(rootType == CoroutineFileWorker.RootType.INTERNAL){
+    return if(rootType == RootType.INTERNAL){
         iFile!!.isFile
     } else {
         uEntity!!.uFile.isDirectory
@@ -123,7 +123,7 @@ fun CommonFileItem.isFile(): Boolean{
 }
 
 fun CommonFileItem.getSize(): Long{
-    return if(rootType == CoroutineFileWorker.RootType.INTERNAL){
+    return if(rootType == RootType.INTERNAL){
         iFile!!.length()
     } else {
         uEntity!!.uFile.length
@@ -131,11 +131,11 @@ fun CommonFileItem.getSize(): Long{
 }
 
 fun Long.sizeBytesToMb(): String{
-    return "${this / (1024.0 * 1024.0)}.mb"
+    return  "${String.format("%.1f", this / (1024.0 * 1024.0))}.mb"
 }
 
 fun CommonFileItem.getName(): String{
-    return if(rootType == CoroutineFileWorker.RootType.INTERNAL){
+    return if(rootType == RootType.INTERNAL){
         iFile!!.name
     } else uEntity!!.uFile.name
 }

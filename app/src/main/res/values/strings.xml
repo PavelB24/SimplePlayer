@@ -6,4 +6,6 @@
     <string name="pause">Player control</string>
     <string name="start">Player control</string>
     <string name="stop">Player control</string>
+    <string name="load_tracks_menu_item">Load tracks</string>
+    <string name="about_menu_item">About</string>
 </resources>

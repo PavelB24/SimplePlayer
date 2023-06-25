@@ -24,7 +24,7 @@ class CoroutineFileWorker(
     private val musicRepository: MusicRepository,
     private val audioDataHandler: AudioDataHandler,
     private val mediaEngine: TrackRemover
-) {
+): InternalPathProvider {
 
     private val fileUtilScope = CoroutineScope(Job() + Dispatchers.IO)
 
@@ -245,15 +245,17 @@ class CoroutineFileWorker(
         }
     }
 
-    enum class RootType() {
-        INTERNAL, USB
-    }
+
 
     sealed class FileEvents() {
 
         data class OnCopyStarted(val bytesToCopy: Long) : FileEvents()
 
         data class OnBlockCopied(val totalCopiedSize: Long) : FileEvents()
+    }
+
+    override fun getInternalStorageRootPath(): String {
+        TODO("Not yet implemented")
     }
 
 
