@@ -82,7 +82,6 @@ class FileBrowserViewModel(
         }
     }
 
-    fun s() = backStack.size
     fun isBackStackEmpty() = backStack.size - 1 == 0
 
 
