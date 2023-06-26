@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.Color
 
 @Stable
 class ScreenProvider {
@@ -18,13 +19,15 @@ class ScreenProvider {
 
     fun setScreen(
         screen: Screen.ScreenRegister,
-        topBarExtras: @Composable () -> Unit = {}
+        TopBarExtras: @Composable () -> Unit = {},
+        Fab: @Composable () -> Unit,
+        colorScaffoldBackground: Color,
     ){
         _currentScreen.value = when(screen){
             Screen.ScreenRegister.HOME -> Screen.Home()
-            Screen.ScreenRegister.IMPORT -> Screen.Import(appBarHelperFactory.appBarComponent(screen = screen))
-            Screen.ScreenRegister.PLAYLISTS -> Screen.Playlists(appBarHelperFactory.appBarComponent(screen = screen))
-            Screen.ScreenRegister.CURRENT_PLAY_LIST -> Screen.CurrentPlay(appBarHelperFactory.appBarComponent(screen = screen))
+            Screen.ScreenRegister.IMPORT -> Screen.Import(appBarHelperFactory.appBarComponent(screen = screen, Fab, colorScaffoldBackground,  TopBarExtras))
+            Screen.ScreenRegister.PLAYLISTS -> Screen.Playlists(appBarHelperFactory.appBarComponent(screen = screen, Fab, colorScaffoldBackground,  TopBarExtras))
+            Screen.ScreenRegister.CURRENT_PLAY_LIST -> Screen.CurrentPlay(appBarHelperFactory.appBarComponent(screen = screen, Fab, colorScaffoldBackground,  TopBarExtras))
         }
     }
 }

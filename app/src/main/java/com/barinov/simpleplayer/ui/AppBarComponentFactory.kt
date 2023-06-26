@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import com.barinov.simpleplayer.R
 
@@ -15,6 +16,8 @@ class AppBarComponentFactory {
 
     fun appBarComponent(
         screen: Screen.ScreenRegister,
+        Fab: @Composable () -> Unit,
+        colorScaffoldBackground: Color,
         TopBarExtras: @Composable () -> Unit = {}
     ): @Composable () -> Unit {
         return when (screen) {
