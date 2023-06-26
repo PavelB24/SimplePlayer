@@ -10,12 +10,21 @@ import androidx.compose.runtime.mutableStateOf
 @Stable
 class ScreenProvider {
 
-    private val _currentScreen = mutableStateOf(Screen.HOME)
+    private val _currentScreen = mutableStateOf<Screen>(Screen.Home())
     val currentScreen: State<Screen> = _currentScreen
 
+    @Stable
+    private val appBarHelperFactory = AppBarComponentFactory()
 
-
-    fun setScreen(screen: Screen){
-        _currentScreen.value = screen
+    fun setScreen(
+        screen: Screen.ScreenRegister,
+        topBarExtras: @Composable () -> Unit = {}
+    ){
+        _currentScreen.value = when(screen){
+            Screen.ScreenRegister.HOME -> Screen.Home()
+            Screen.ScreenRegister.IMPORT -> Screen.Import(appBarHelperFactory.appBarComponent(screen = screen))
+            Screen.ScreenRegister.PLAYLISTS -> Screen.Playlists(appBarHelperFactory.appBarComponent(screen = screen))
+            Screen.ScreenRegister.CURRENT_PLAY_LIST -> Screen.CurrentPlay(appBarHelperFactory.appBarComponent(screen = screen))
+        }
     }
 }

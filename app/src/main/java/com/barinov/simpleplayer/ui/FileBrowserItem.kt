@@ -1,7 +1,5 @@
 package com.barinov.simpleplayer.ui
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
@@ -31,7 +29,7 @@ fun FileItem(item: CommonFileItem, interactor: ItemInteractor<CommonFileItem>) {
     val isFile = item.isFile()
     Card(
         modifier = Modifier
-            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
             .fillMaxWidth()
             .combinedClickable(
                 onClick = {
@@ -42,7 +40,7 @@ fun FileItem(item: CommonFileItem, interactor: ItemInteractor<CommonFileItem>) {
                 }
             ),
         elevation = 20.dp,
-        shape = RoundedCornerShape(10.dp)
+        shape = RoundedCornerShape(6.dp)
     ) {
         Row(
             modifier = Modifier

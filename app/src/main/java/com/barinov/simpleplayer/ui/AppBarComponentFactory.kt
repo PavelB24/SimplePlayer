@@ -1,5 +1,6 @@
 package com.barinov.simpleplayer.ui
 
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
@@ -11,40 +12,77 @@ import com.barinov.simpleplayer.R
 @Stable
 class AppBarComponentFactory {
 
+
+    fun appBarComponent(
+        screen: Screen.ScreenRegister,
+        TopBarExtras: @Composable () -> Unit = {}
+    ): @Composable () -> Unit {
+        return when (screen) {
+            Screen.ScreenRegister.HOME -> {
+                @Composable {
+//                    TopAppBar() {
+//
+//                    }
+                }
+            }
+
+            Screen.ScreenRegister.IMPORT -> {
+                @Composable {
+                    TopAppBar() {
+                        TopBarExtras()
+                    }
+                }
+            }
+            Screen.ScreenRegister.PLAYLISTS -> {
+                @Composable {
+                    TopAppBar() {
+                        TopBarExtras()
+                    }
+                }
+            }
+            Screen.ScreenRegister.CURRENT_PLAY_LIST -> {
+                @Composable {
+                    TopAppBar() {
+                        TopBarExtras()
+                    }
+                }
+            }
+
+        }
+    }
+
     @Composable
-    fun GetMenuInstance(
-        screen: ScreenProvider,
+    private fun GetMenuInstance(
+        screen: Screen.ScreenRegister,
         navState: NavHostController
     ) {
-        val currScreen by screen.currentScreen
-        when (currScreen) {
-            Screen.HOME -> {
-                CreateDropDownMenu(currScreen, navState)
+        when (screen) {
+            Screen.ScreenRegister.HOME -> CreateDropDownMenu(screen, navState)
+            Screen.ScreenRegister.IMPORT -> {
+//                CreateDropDownMenu(screen, navState)
             }
-            Screen.IMPORT -> {
-//                createDropDownMenu(currScreen, navState)
+
+            Screen.ScreenRegister.PLAYLISTS -> CreateActionIcon(navState)
+            Screen.ScreenRegister.CURRENT_PLAY_LIST -> {
+                //                CreateDropDownMenu(currScreen, navState)
             }
-            Screen.PLAYLISTS -> {
-                CreateActionIcon(navState)
-            }
-            Screen.CURRENT_PLAY_LIST -> {
-//                CreateDropDownMenu(currScreen, navState)
-            }
+
         }
     }
 
 
     @Composable
     private fun CreateDropDownMenu(
-        screen: Screen,
+        screen: Screen.ScreenRegister,
         navState: NavHostController
     ) {
         val refs =
             when (screen) {
-                Screen.PLAYLISTS -> arrayOf(R.string.load_tracks_menu_item)
-                Screen.HOME -> {
+                Screen.ScreenRegister.PLAYLISTS -> arrayOf(R.string.load_tracks_menu_item)
+                Screen.ScreenRegister.HOME -> {
                     arrayOf(R.string.about_menu_item, R.string.load_tracks_menu_item)
                 }
+
                 else -> {
                     arrayOf()
                 }
@@ -52,7 +90,7 @@ class AppBarComponentFactory {
         val onClick: (Int) -> Unit =
             { ref ->
                 when (ref) {
-                    R.string.load_tracks_menu_item -> navState.navigate(Screen.IMPORT.name)
+                    R.string.load_tracks_menu_item -> navState.navigate(Screen.ScreenRegister.IMPORT.name)
                     R.string.about_menu_item -> {}
                 }
             }
@@ -65,8 +103,8 @@ class AppBarComponentFactory {
     private fun CreateActionIcon(
         navState: NavHostController
     ) {
-        MenuImageButton(Icons.Default.Add){
-            navState.navigate(Screen.IMPORT.name)
+        MenuImageButton(Icons.Default.Add) {
+            navState.navigate(Screen.ScreenRegister.IMPORT.name)
         }
     }
 

@@ -21,14 +21,14 @@ fun NavigationHost(
 
     NavHost(
         navController = navController,
-        startDestination = startScreenState.value.name
+        startDestination = startScreenState.value.screenName.name
     )
     {
-        composable(Screen.IMPORT.name) {
+        composable(Screen.ScreenRegister.IMPORT.name) {
             FileBrowser(paddings = paddings , navController = navController, menuProvider = menuProvider)
         }
 
-        composable(Screen.HOME.name){
+        composable(Screen.ScreenRegister.HOME.name){
             HomeScreen(menuProvider)
         }
 

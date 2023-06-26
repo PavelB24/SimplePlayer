@@ -1,7 +1,6 @@
 package com.barinov.simpleplayer.ui.viewModel
 
 import android.os.Environment
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barinov.simpleplayer.domain.RootType
@@ -82,7 +81,7 @@ class FileBrowserViewModel(
         }
     }
 
-    fun isBackStackEmpty() = backStack.size - 1 == 0
+    fun isBackStackGoingToEmpty() = backStack.size - 1 == 0
 
 
 }

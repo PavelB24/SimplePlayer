@@ -1,6 +1,5 @@
 package com.barinov.simpleplayer.ui
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.barinov.simpleplayer.ui.viewModel.FileBrowserViewModel
 import com.barinov.simpleplayer.base.ItemInteractor
@@ -23,14 +23,14 @@ fun FileBrowser(
     viewModel: FileBrowserViewModel = getViewModel()
 ) {
     LaunchedEffect(key1 = Unit) {
-        menuProvider.setScreen(Screen.IMPORT)
+        menuProvider.setScreen(Screen.ScreenRegister.IMPORT)
     }
     val files = viewModel.filesFlow.collectAsState()
     val backEnabler = remember {
-        mutableStateOf(true)
+        mutableStateOf(false)
     }
     BackHandler(backEnabler.value) {
-        if (!viewModel.isBackStackEmpty()){
+        if (!viewModel.isBackStackGoingToEmpty()){
             viewModel.goBack()
         } else {
             viewModel.goBack()
@@ -41,6 +41,9 @@ fun FileBrowser(
         override fun onClick(item: CommonFileItem) {
             if(!item.isFile()){
                 viewModel.onFolderClicked(item)
+                if(!backEnabler.value){
+                    backEnabler.value = true
+                }
             }
         }
 
@@ -68,7 +71,7 @@ fun FileBrowser(
 
 @Composable
 fun HomeScreen(menuProvider: ScreenProvider) {
-    menuProvider.setScreen(Screen.HOME)
+    menuProvider.setScreen(Screen.ScreenRegister.HOME)
 }
 
 @Composable
