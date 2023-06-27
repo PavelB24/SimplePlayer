@@ -7,6 +7,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavHostController
 
 @Stable
 class ScreenProvider {
@@ -19,15 +20,16 @@ class ScreenProvider {
 
     fun setScreen(
         screen: Screen.ScreenRegister,
-        TopBarExtras: @Composable () -> Unit = {},
         Fab: @Composable () -> Unit,
-        colorScaffoldBackground: Color,
+        colorScaffoldBackground: Color = primaryColor,
+        TopNavigationIcon: @Composable () -> Unit = {},
+        TopBarExtras: @Composable () -> Unit = {},
     ){
         _currentScreen.value = when(screen){
             Screen.ScreenRegister.HOME -> Screen.Home()
-            Screen.ScreenRegister.IMPORT -> Screen.Import(appBarHelperFactory.appBarComponent(screen = screen, Fab, colorScaffoldBackground,  TopBarExtras))
-            Screen.ScreenRegister.PLAYLISTS -> Screen.Playlists(appBarHelperFactory.appBarComponent(screen = screen, Fab, colorScaffoldBackground,  TopBarExtras))
-            Screen.ScreenRegister.CURRENT_PLAY_LIST -> Screen.CurrentPlay(appBarHelperFactory.appBarComponent(screen = screen, Fab, colorScaffoldBackground,  TopBarExtras))
+            Screen.ScreenRegister.IMPORT -> Screen.Import(appBarHelperFactory.appBarComponent(screen = screen, TopBarExtras = TopBarExtras))
+            Screen.ScreenRegister.PLAYLISTS -> Screen.Playlists(appBarHelperFactory.appBarComponent(screen = screen,  TopBarExtras = TopBarExtras))
+            Screen.ScreenRegister.CURRENT_PLAY_LIST -> Screen.CurrentPlay(appBarHelperFactory.appBarComponent(screen = screen,  TopBarExtras =  TopBarExtras))
         }
     }
 }
