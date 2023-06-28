@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
                 },
                 bottomBar = {
                     AnimatedVisibility(
-                        visible = currentScreen.currentScreen.value is Screen.CurrentPlay || currentScreen.currentScreen.value is Screen.Playlists,
+                        visible = currentScreen.currentScreen.value is Screen.TrackDetails || currentScreen.currentScreen.value is Screen.Playlists,
                         enter = expandVertically(),
                         exit = shrinkVertically()
                     ) {

@@ -82,6 +82,9 @@ class FileBrowserViewModel(
     }
 
     fun isBackStackGoingToEmpty() = backStack.size - 1 == 0
+    fun importFromCurrentFolder() {
+        TODO("Not yet implemented")
+    }
 
 
 }

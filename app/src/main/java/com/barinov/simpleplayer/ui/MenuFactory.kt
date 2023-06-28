@@ -1,73 +1,57 @@
 package com.barinov.simpleplayer.ui
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.navigation.NavHostController
 import com.barinov.simpleplayer.R
 
 @Stable
 object MenuFactory {
 
-    @Composable
-    private fun GetMenuInstance(
-        screen: Screen.ScreenRegister,
-        navState: NavHostController,
-        actionList: TopBarActions
-    ) {
-        when (screen) {
-            Screen.ScreenRegister.HOME -> CreateDropDownMenu(screen, navState)
-            Screen.ScreenRegister.IMPORT -> {
-                CreateActionIcon(navState = navState, actionList)
-//                CreateDropDownMenu(screen, navState)
+
+    fun getMenuInstance(
+        connector: TopBarConnector
+    ): @Composable () -> Unit {
+        return when (connector) {
+            is TopBarConnector.FileBrowserTopBarConnector -> {
+                {
+                    FileBrowserMenu(connector)
+                }
             }
 
-            Screen.ScreenRegister.PLAYLISTS -> CreateActionIcon(navState)
-            Screen.ScreenRegister.CURRENT_PLAY_LIST -> {
-                //                CreateDropDownMenu(currScreen, navState)
+            is TopBarConnector.PlaylistsTopBarConnector -> {
+                {
+                    CurrentPlayListMenu(connector)
+                }
             }
-
         }
     }
 
 
     @Composable
-    private fun CreateDropDownMenu(
-        screen: Screen.ScreenRegister,
-        navState: NavHostController
+    private fun CurrentPlayListMenu(
+        connector: TopBarConnector.PlaylistsTopBarConnector
     ) {
-        val refs =
-            when (screen) {
-                Screen.ScreenRegister.PLAYLISTS -> arrayOf(R.string.load_tracks_menu_item)
-                Screen.ScreenRegister.HOME -> {
-                    arrayOf(R.string.about_menu_item, R.string.load_tracks_menu_item)
-                }
+        val refs = arrayOf(R.string.load_tracks_menu_item)
 
-                else -> {
-                    arrayOf()
-                }
-            }
         val onClick: (Int) -> Unit =
             { ref ->
                 when (ref) {
-                    R.string.load_tracks_menu_item -> navState.navigate(Screen.ScreenRegister.IMPORT.name)
-                    R.string.about_menu_item -> {}
+                    R.string.load_tracks_menu_item -> connector.importTracks()
+                    R.string.about_menu_item -> connector.showAboutDialog()
                 }
             }
-
         ExpandedMenu(refs = refs, onClick = onClick)
     }
 
 
     @Composable
-    private fun CreateActionIcon(
-        navState: NavHostController,
-        actionList: TopBarActions
+    private fun FileBrowserMenu(
+        connector: TopBarConnector.FileBrowserTopBarConnector,
     ) {
-        if(actionList !is TopBarActions.FileBrowserTopBarActions) throw  IllegalArgumentException()
-        MenuImageButton(Icons.Default.Add) {
-            navState.navigate(Screen.ScreenRegister.IMPORT.name)
+        MenuImageButton(connector.icon) {
+            connector.onFolderPeeked()
         }
     }
+
+
 }

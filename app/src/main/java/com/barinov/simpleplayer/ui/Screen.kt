@@ -12,10 +12,7 @@ sealed class Screen(
     data class Home(
         override val Toolbar: @Composable () -> Unit = {},
         override val screenName: ScreenRegister = ScreenRegister.HOME
-    ) : Screen(Toolbar,  screenName) {
-
-
-    }
+    ) : Screen(Toolbar,  screenName)
 
     @Immutable
     data class Import(
@@ -30,15 +27,21 @@ sealed class Screen(
     ) : Screen(Toolbar, screenName)
 
     @Immutable
-    data class CurrentPlay(
+    data class SelectedPlayList(
         override val Toolbar: @Composable () -> Unit,
-        override val screenName: ScreenRegister = ScreenRegister.CURRENT_PLAY_LIST
+        override val screenName: ScreenRegister = ScreenRegister.PLAYLISTS
+    ) :  Screen(Toolbar, screenName)
+
+    @Immutable
+    data class TrackDetails(
+        override val Toolbar: @Composable () -> Unit,
+        override val screenName: ScreenRegister = ScreenRegister.TRACK_DETAILS
     ) : Screen(Toolbar, screenName)
 
 
 
     @Immutable
     enum class ScreenRegister {
-        HOME, IMPORT, PLAYLISTS, CURRENT_PLAY_LIST
+        HOME, IMPORT, PLAYLISTS, TRACK_DETAILS, SELECTED_PLAY_LIST
     }
 }

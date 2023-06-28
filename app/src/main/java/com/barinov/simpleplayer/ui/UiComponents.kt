@@ -3,10 +3,16 @@ package com.barinov.simpleplayer.ui
 import android.graphics.drawable.VectorDrawable
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 
@@ -92,7 +98,17 @@ fun MenuImageButton(
     image: ImageVector,
     onClick: () -> Unit
 ){
-    IconButton(onClick = { onClick.invoke()}) {
+//    DisposableEffect(key1 = , effect = )
+    val infiniteTransition = rememberInfiniteTransition()
+    val animation by infiniteTransition.animateFloat(
+        initialValue = 20.0f,
+        targetValue = 30.0f,
+        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse)
+    )
+    IconButton(
+        onClick = { onClick.invoke()},
+        Modifier.size(animation.dp)
+    ) {
         Icon(image, "")
     }
 }
