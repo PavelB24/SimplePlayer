@@ -19,21 +19,19 @@ import me.jahnen.libaums.core.fs.UsbFile
 import me.jahnen.libaums.core.fs.UsbFileStreamFactory
 import java.io.File
 
-class CoroutineFileWorker(
+class FileWorker(
     context: Context,
     private val musicRepository: MusicRepository,
     private val audioDataHandler: AudioDataHandler,
     private val mediaEngine: TrackRemover
-): InternalPathProvider {
+) : InternalPathProvider {
 
-    private val fileUtilScope = CoroutineScope(Job() + Dispatchers.IO)
 
-    private val _filesEventFlow = MutableSharedFlow<FileEvents>()
-    private val filesEventFlow = _filesEventFlow.asSharedFlow()
+    val _filesEventFlow = MutableSharedFlow<FileEvents>()
 
 
     private val folderName = "user_music"
-    private val mutex = Mutex()
+
 
     private val internalPath =
         (ContextWrapper(context).applicationInfo.dataDir + File.separator + folderName).also {
@@ -45,71 +43,62 @@ class CoroutineFileWorker(
         }
 
 
-    fun scanWithSubFolders(
+    suspend fun scanWithSubFolders(
         file: CommonFileItem,
-        copyOnInternalStorage: Boolean,
+        buffer: MutableList<CommonFileItem>,
         playListName: String?
     ) {
 //        if (!file.isDirectory) throw IllegalArgumentException()
-        fileUtilScope.launch {
-            if (file.rootType == RootType.INTERNAL) {
-                file.iFile?.apply {
-                    if (isFile) {
-                        if (name.endsWith(".mp3")) {
-                            fileUtilScope.launch {
-                                mutex.withLock {
-                                    addValidMusicFile(file, copyOnInternalStorage, playListName)
-                                }
-                            }
-                        }
-                    } else {
-                        listFiles()?.forEach {
-                            scanWithSubFolders(
-                                it.toCommonFileItem(),
-                                copyOnInternalStorage,
-                                playListName
-                            )
-                        }
+        if (file.rootType == RootType.INTERNAL) {
+            file.iFile?.apply {
+                if (isFile) {
+                    if (name.endsWith(".mp3")) {
+                        buffer.add(toCommonFileItem())
+                    }
+                } else {
+                    listFiles()?.forEach {
+                        scanWithSubFolders(
+                            it.toCommonFileItem(),
+                            buffer,
+                            playListName
+                        )
                     }
                 }
+            }
+        } else {
+            file.uEntity?.apply {
+                if (!uFile.isDirectory) {
+                    if (uFile.name.endsWith(".mp3")) {
+                        buffer.add(this.uFile.toCommonFileItem(fs))
+                    }
+                } else {
+                    uFile.listFiles().forEach {
+                        scanWithSubFolders(
+                            it.toCommonFileItem(fs),
+                            buffer,
+                            playListName
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+
+    suspend fun deleteFiles(mFiles: List<MusicFile>, deleteFile: Boolean) {
+        mFiles.forEach {
+            mediaEngine.deleteFromCurrentPlayBack(it)
+            if (mediaEngine.getCurrentTrackId() != it.id) {
+                deleteFile(it, deleteFile)
+                musicRepository.deleteMusicFileIndexById(it.id)
             } else {
-                file.uEntity?.apply {
-                    if (!copyOnInternalStorage) throw IllegalArgumentException()
-                    if (!uFile.isDirectory) {
-                        if (uFile.name.endsWith(".mp3")) {
-                            fileUtilScope.launch {
-                                mutex.withLock {
-                                    addValidMusicFile(file, true, playListName)
-                                }
-                            }
-                        }
-                    } else {
-                        uFile.listFiles().forEach {
-                            scanWithSubFolders(it.toCommonFileItem(fs), true, playListName)
-                        }
-                    }
-                }
+                deleteFile(it, deleteFile)
             }
         }
     }
 
-    fun deleteFiles(mFiles: List<MusicFile>, deleteFile: Boolean) {
-        fileUtilScope.launch {
-            mutex.withLock {
-                mFiles.forEach {
-                    mediaEngine.deleteFromCurrentPlayBack(it)
-                    if (mediaEngine.getCurrentTrackId() != it.id) {
-                        deleteFile(it, deleteFile)
-                        musicRepository.deleteMusicFileIndexById(it.id)
-                    } else {
-                        deleteFile(it, deleteFile)
-                    }
-                }
-            }
-        }
-    }
 
-    fun deleteFile(mFile: MusicFile, deleteFile: Boolean) {
+    private fun deleteFile(mFile: MusicFile, deleteFile: Boolean) {
         mFile.apply {
             if (file.isFile && deleteFile) {
                 file.delete()
@@ -117,7 +106,7 @@ class CoroutineFileWorker(
         }
     }
 
-    private suspend fun addValidMusicFile(
+    suspend fun addValidMusicFile(
         musicFile: CommonFileItem,
         copyOnInternalStorage: Boolean,
         playListName: String?
@@ -133,28 +122,28 @@ class CoroutineFileWorker(
                 musicRepository.addFileIndex(metadata, finalPath, playListName)
             }
         } else {
-            if(!copyOnInternalStorage) throw IllegalArgumentException()
+            if (!copyOnInternalStorage) throw IllegalArgumentException()
             musicFile.uEntity?.apply {
                 onExternalCopy(uFile, fs, playListName)
             }
         }
     }
 
-    private suspend fun copyExternal(uMusicFile: CommonFileItem.UsbData): String{
+    private suspend fun copyExternal(uMusicFile: CommonFileItem.UsbData): String {
         return copyExternal(uMusicFile.fs, uMusicFile.uFile)
     }
 
-     private suspend fun copyExternal(fs: FileSystem, uMusicFile: UsbFile): String{
+    private suspend fun copyExternal(fs: FileSystem, uMusicFile: UsbFile): String {
         val fileName = uMusicFile.name
         val newPath = "$internalPath${File.separator}$fileName"
         uMusicFile.apply {
-            UsbFileStreamFactory.createBufferedInputStream(uMusicFile, fs).use { fis->
+            UsbFileStreamFactory.createBufferedInputStream(uMusicFile, fs).use { fis ->
                 File(newPath).apply {
-                    if(!isFile){
+                    if (!isFile) {
                         createNewFile()
                     }
-                    outputStream().use { fos->
-                        fis.copyWithCallBack(fos){
+                    outputStream().use { fos ->
+                        fis.copyWithCallBack(fos) {
                             _filesEventFlow.emit(FileEvents.OnBlockCopied(it))
                         }
                     }
@@ -185,40 +174,35 @@ class CoroutineFileWorker(
 
     fun scanSelectedFolder(
         musicFile: CommonFileItem,
+        buffer: MutableList<CommonFileItem>,
         copyOnInternalStorage: Boolean,
         playListName: String?
     ) {
-        fileUtilScope.launch {
-            mutex.withLock {
-                if (musicFile.rootType == RootType.INTERNAL) {
-                    musicFile.iFile?.apply {
-                        if (!isDirectory) throw IllegalArgumentException()
-                        listFiles()?.forEach {
-                            if (it.isFile) {
-                                if (it.name.endsWith(".mp3")) {
-                                    addValidMusicFile(
-                                        it.toCommonFileItem(),
-                                        copyOnInternalStorage,
-                                        playListName
-                                    )
-                                }
-                            }
+        if (musicFile.rootType == RootType.INTERNAL) {
+            musicFile.iFile?.apply {
+                if (!isDirectory) throw IllegalArgumentException()
+                listFiles()?.forEach {
+                    if (it.isFile) {
+                        if (it.name.endsWith(".mp3")) {
+                            buffer.add(toCommonFileItem())
                         }
-                    }
-                } else {
-                    musicFile.uEntity?.apply {
-                        if (!uFile.isDirectory) throw IllegalArgumentException()
-                        uFile.listFiles().forEach {
-                            onExternalCopy(it, fs, playListName)
-                        }
-
                     }
                 }
+            }
+        } else {
+            musicFile.uEntity?.apply {
+                if (!uFile.isDirectory) throw IllegalArgumentException()
+                uFile.listFiles().forEach {
+                    if (!it.isDirectory && it.name.endsWith(".mp3")) {
+                        buffer.add(it.toCommonFileItem(fs))
+                    }
+                }
+
             }
         }
     }
 
-    private suspend fun onExternalCopy(usbFile: UsbFile, fs: FileSystem, playListName: String?){
+    private suspend fun onExternalCopy(usbFile: UsbFile, fs: FileSystem, playListName: String?) {
         val finalPath = copyExternal(usbFile.toCommonFileItem(fs).uEntity!!)
         val metadata = audioDataHandler.getMusicFileMetaData(File(finalPath))
         musicRepository.addFileIndex(metadata, finalPath, playListName)
@@ -246,12 +230,13 @@ class CoroutineFileWorker(
     }
 
 
+    sealed interface FileEvents {
 
-    sealed class FileEvents() {
+        data class OnCopyStarted(val bytesToCopy: Long): FileEvents
 
-        data class OnCopyStarted(val bytesToCopy: Long) : FileEvents()
+        data class OnBlockCopied(val totalCopiedSize: Long): FileEvents
 
-        data class OnBlockCopied(val totalCopiedSize: Long) : FileEvents()
+        data class OnSearchCompleted(val message: String): FileEvents
     }
 
     override fun getInternalStorageRootPath(): String {

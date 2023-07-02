@@ -1,5 +1,6 @@
 package com.barinov.simpleplayer.ui
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.unit.Dp
@@ -17,11 +18,12 @@ fun NavigationHost(
 ) {
 
     val hostViewModel: HostViewModel = getViewModel()
+//    val darkTheme = isSystemInDarkTheme()
     val startScreenState = hostViewModel.startScreenFlow.collectAsState()
 
     NavHost(
         navController = navController,
-        startDestination = startScreenState.value.screenName.name
+        startDestination = startScreenState.value.name
     )
     {
         composable(Screen.ScreenRegister.IMPORT.name) {
@@ -29,7 +31,7 @@ fun NavigationHost(
         }
 
         composable(Screen.ScreenRegister.HOME.name){
-            HomeScreen(menuProvider)
+            HomeScreen(menuProvider, navController)
         }
 
 //        composable(Screen.SETTINGS.name) {

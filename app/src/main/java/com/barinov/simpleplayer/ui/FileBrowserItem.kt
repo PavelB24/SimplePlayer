@@ -3,13 +3,17 @@ package com.barinov.simpleplayer.ui
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -32,6 +36,8 @@ fun FileItem(item: CommonFileItem, interactor: ItemInteractor<CommonFileItem>) {
             .padding(horizontal = 8.dp, vertical = 4.dp)
             .fillMaxWidth()
             .combinedClickable(
+                remember { MutableInteractionSource() },
+                selectableRipple(),
                 onClick = {
                     interactor.onClick(item)
                 },
@@ -61,7 +67,7 @@ fun FileItem(item: CommonFileItem, interactor: ItemInteractor<CommonFileItem>) {
                     .weight(0.8f)
             )
             Spacer(modifier = Modifier.width(20.dp))
-            if(isFile) {
+            if (isFile) {
                 Text(
 //                    text = item.getSize().sizeBytesToMb(),
                     text = item.getSize().sizeBytesToMb(),

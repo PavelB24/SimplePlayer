@@ -2,6 +2,8 @@ package com.barinov.simpleplayer.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import com.barinov.simpleplayer.R
 
 @Stable
@@ -48,7 +50,7 @@ object MenuFactory {
     private fun FileBrowserMenu(
         connector: TopBarConnector.FileBrowserTopBarConnector,
     ) {
-        MenuImageButton(connector.icon) {
+        AddFromCurrentDirImageButton() {
             connector.onFolderPeeked()
         }
     }

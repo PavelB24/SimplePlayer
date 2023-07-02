@@ -10,7 +10,7 @@ class MusicRepository(
 
     }
 
-    fun getTracksCountFlow()  = dao.getTracksCountFlow()
+    fun getTracksCount()  = dao.getTracksCount()
 
     fun deleteMusicFileIndexById(id: String) {
 

@@ -1,6 +1,5 @@
 package com.barinov.simpleplayer.data
 
-import android.media.MediaPlayer.TrackInfo
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -21,6 +20,6 @@ interface MusicTracksDao {
     suspend fun getTrackById(id: String): MusicFileMetadataEntity?
 
     @Query("SELECT COUNT(*) FROM tracks")
-    fun getTracksCountFlow(): Flow<Int>
+    fun getTracksCount(): Int
 
 }

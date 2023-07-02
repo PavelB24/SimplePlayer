@@ -7,13 +7,19 @@ import com.barinov.simpleplayer.broadcastReceivers.UsbEventsBroadcastReceiver
 import com.barinov.simpleplayer.core.MediaController
 import com.barinov.simpleplayer.core.MediaEngine
 import com.barinov.simpleplayer.data.LocalDataBase
+import com.barinov.simpleplayer.domain.AudioDataHandler
+import com.barinov.simpleplayer.domain.EventProvider
+import com.barinov.simpleplayer.domain.FileWorker
 import com.barinov.simpleplayer.domain.MassStorageProvider
 import com.barinov.simpleplayer.domain.MusicRepository
 import com.barinov.simpleplayer.domain.Player
+import com.barinov.simpleplayer.domain.TrackRemover
+import com.barinov.simpleplayer.domain.util.SearchUtil
 import com.barinov.simpleplayer.prefs.PreferencesManager
 import com.barinov.simpleplayer.ui.viewModel.FileBrowserViewModel
 import com.barinov.simpleplayer.ui.viewModel.HostViewModel
 import org.koin.android.ext.koin.androidApplication
+import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -22,7 +28,17 @@ const val DATA_BASE_NAME = "simple_player_db"
 
 val module = module {
 
+    single {
+        SearchUtil(get())
+    }
 
+    single {
+        AudioDataHandler()
+    }
+
+    single {
+        FileWorker(androidContext(), get(), get(), get<MediaEngine>() as TrackRemover)
+    }
 
     single {
         Room.databaseBuilder(
@@ -57,11 +73,11 @@ val module = module {
     }
 
     viewModel {
-        FileBrowserViewModel(get<UsbEventsBroadcastReceiver>() as MassStorageProvider)
+        FileBrowserViewModel(get<UsbEventsBroadcastReceiver>() as MassStorageProvider, get())
     }
 
     viewModel{
-        HostViewModel(get())
+        HostViewModel(get(), get<SearchUtil>() as EventProvider)
     }
 
 }

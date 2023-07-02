@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.barinov.simpleplayer.domain.RootType
 import com.barinov.simpleplayer.domain.MassStorageProvider
 import com.barinov.simpleplayer.domain.model.CommonFileItem
+import com.barinov.simpleplayer.domain.util.SearchUtil
 import com.barinov.simpleplayer.isFile
 import com.barinov.simpleplayer.toCommonFileItem
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +14,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class FileBrowserViewModel(
-    private val massStorageProvider: MassStorageProvider
+    private val massStorageProvider: MassStorageProvider,
+    private val searchUtil: SearchUtil
 ) : ViewModel() {
 
     private val rootTypeFlow: MutableStateFlow<RootType> = MutableStateFlow(RootType.INTERNAL)
@@ -37,12 +39,17 @@ class FileBrowserViewModel(
                     }
                 }
             }
-        }.stateIn(viewModelScope, SharingStarted.Eagerly,
+        }
+            .flowOn(Dispatchers.IO)
+            .stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
             getInternalRoot().listFiles()?.map { it.toCommonFileItem() } ?: listOf())
 
 
     private fun getInternalRoot() = Environment.getExternalStorageDirectory()
 
+    fun autoSearch() = searchUtil.autoSearch(false, null)
 
     fun onFolderClicked(folder: CommonFileItem, addInStack: Boolean = true) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -83,7 +90,7 @@ class FileBrowserViewModel(
 
     fun isBackStackGoingToEmpty() = backStack.size - 1 == 0
     fun importFromCurrentFolder() {
-        TODO("Not yet implemented")
+
     }
 
 

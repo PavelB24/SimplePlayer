@@ -6,6 +6,8 @@ import me.jahnen.libaums.core.fs.UsbFile
 import java.io.File
 
 data class CommonFileItem(
+    val signature: String,
+    val len: Long,
     val rootType: RootType,
     val iFile: File?,
     val uEntity: UsbData?

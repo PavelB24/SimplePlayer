@@ -13,7 +13,9 @@ import com.barinov.simpleplayer.domain.RootType
 import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.domain.model.MusicFile
 import com.barinov.simpleplayer.service.PlayerMediaService
-import com.barinov.simpleplayer.ui.primaryColor
+import com.barinov.simpleplayer.ui.ColorsContainer
+import com.barinov.simpleplayer.ui.SystemColorsContainer
+import com.barinov.simpleplayer.ui.primary_color
 import me.jahnen.libaums.core.fs.FileSystem
 import me.jahnen.libaums.core.fs.UsbFile
 import java.io.File
@@ -35,11 +37,19 @@ inline fun <T> List<T>.indexOrNull(predicate: (T) -> Boolean): Int? {
     return null
 }
 
-fun File.toCommonFileItem() =
-    CommonFileItem(RootType.INTERNAL, this, null)
+fun File.toCommonFileItem(): CommonFileItem {
+    val signature = this.path + File.separator + name
+    return CommonFileItem(signature, length(), RootType.INTERNAL, this, null)
+}
 
-fun UsbFile.toCommonFileItem(fs: FileSystem) =
-    CommonFileItem(RootType.USB, null, CommonFileItem.UsbData(this, fs))
+fun UsbFile.toCommonFileItem(fs: FileSystem): CommonFileItem {
+    val signature = this.absolutePath + File.separator + name
+    return CommonFileItem(signature, length, RootType.USB, null, CommonFileItem.UsbData(this, fs))
+}
+
+fun ColorsContainer.toSystemColorsContainer(): SystemColorsContainer{
+    return SystemColorsContainer(systemTopUiColor, navBarColor)
+}
 
 fun NotificationCompat.Builder.completeStyling(
     context: Context,
@@ -106,7 +116,7 @@ fun NotificationCompat.Builder.completeStyling(
                 .setMediaSession(sessionToken)
         ); // setMediaSession требуется для Android Wear
         setSmallIcon(R.mipmap.ic_launcher)
-        color = primaryColor.toArgb()
+        color = primary_color.toArgb()
         setShowWhen(false)
 //        builder.setPriority(NotificationCompat.PRIORITY_HIGH)
         setOnlyAlertOnce(true)
