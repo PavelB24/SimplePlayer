@@ -18,6 +18,7 @@ import com.barinov.simpleplayer.domain.util.SearchUtil
 import com.barinov.simpleplayer.prefs.PreferencesManager
 import com.barinov.simpleplayer.ui.viewModel.FileBrowserViewModel
 import com.barinov.simpleplayer.ui.viewModel.HostViewModel
+import com.barinov.simpleplayer.ui.viewModel.ScanViewModel
 import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -77,7 +78,7 @@ val module = module {
     }
 
     viewModel{
-        HostViewModel(get(), get<SearchUtil>() as EventProvider)
+        ScanViewModel(get(), get())
     }
 
 }

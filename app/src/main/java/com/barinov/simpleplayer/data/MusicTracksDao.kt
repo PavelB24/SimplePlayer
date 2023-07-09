@@ -20,6 +20,6 @@ interface MusicTracksDao {
     suspend fun getTrackById(id: String): MusicFileMetadataEntity?
 
     @Query("SELECT COUNT(*) FROM tracks")
-    fun getTracksCount(): Int
+    suspend fun getTracksCount(): Int
 
 }

@@ -12,6 +12,7 @@ import com.barinov.simpleplayer.toCommonFileItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import me.jahnen.libaums.core.fs.UsbFile
 
 class FileBrowserViewModel(
     private val massStorageProvider: MassStorageProvider,
@@ -22,7 +23,8 @@ class FileBrowserViewModel(
 
     private val massStorageState = massStorageProvider.mssStorageDeviceAccessibilityFlow
 
-    private val internalFilesFlow = MutableStateFlow(getInternalRoot().listFiles()?.map { it.toCommonFileItem() } ?: listOf())
+    private val internalFilesFlow =
+        MutableStateFlow(getInternalRoot().listFiles()?.map { it.toCommonFileItem() } ?: listOf())
 
     private val backStack = ArrayDeque<CommonFileItem>()
 
@@ -40,11 +42,19 @@ class FileBrowserViewModel(
                 }
             }
         }
-            .flowOn(Dispatchers.IO)
             .stateIn(
-            viewModelScope,
-            SharingStarted.Eagerly,
-            getInternalRoot().listFiles()?.map { it.toCommonFileItem() } ?: listOf())
+                viewModelScope,
+                SharingStarted.Eagerly,
+                getInternalRoot().listFiles()?.map { it.toCommonFileItem() } ?: listOf())
+
+
+    private var currentFolder =
+        if (rootTypeFlow.value == RootType.INTERNAL) {
+            Environment.getExternalStorageDirectory().toCommonFileItem()
+        } else{
+            val massStorageRoot = massStorageProvider.getRoot()
+            massStorageRoot.second.toCommonFileItem(massStorageRoot.first)
+        }
 
 
     private fun getInternalRoot() = Environment.getExternalStorageDirectory()
@@ -53,12 +63,14 @@ class FileBrowserViewModel(
 
     fun onFolderClicked(folder: CommonFileItem, addInStack: Boolean = true) {
         viewModelScope.launch(Dispatchers.IO) {
+            currentFolder = folder
             if (folder.isFile()) throw IllegalArgumentException("It's not a folder")
             if (addInStack) backStack.addLast(getParent(folder) ?: throw IllegalArgumentException())
             if (rootTypeFlow.value == RootType.INTERNAL) {
                 folder.iFile?.listFiles()?.let {
                     internalFilesFlow.emit(it.map { file ->
-                        file.toCommonFileItem() })
+                        file.toCommonFileItem()
+                    })
                 }
             } else {
                 massStorageProvider.openFolder(folder.uEntity?.uFile)
@@ -66,8 +78,8 @@ class FileBrowserViewModel(
         }
     }
 
-    private fun getParent(folder: CommonFileItem): CommonFileItem?{
-        return if(folder.rootType == RootType.INTERNAL){
+    private fun getParent(folder: CommonFileItem): CommonFileItem? {
+        return if (folder.rootType == RootType.INTERNAL) {
             folder.iFile?.parentFile?.run {
                 toCommonFileItem()
             }
@@ -79,7 +91,9 @@ class FileBrowserViewModel(
     }
 
     fun goBack() {
-        onFolderClicked(backStack.removeLast(), false)
+        val last = backStack.removeLast()
+        currentFolder = last
+        onFolderClicked(last, false)
     }
 
     fun changeRootType(rootType: RootType) {
@@ -89,8 +103,13 @@ class FileBrowserViewModel(
     }
 
     fun isBackStackGoingToEmpty() = backStack.size - 1 == 0
+
     fun importFromCurrentFolder() {
 
+    }
+
+    fun peekFolder(folder: CommonFileItem? = null): ArrayList<CommonFileItem> {
+        return arrayListOf(folder ?: currentFolder)
     }
 
 

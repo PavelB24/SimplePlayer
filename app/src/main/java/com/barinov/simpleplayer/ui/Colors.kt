@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.ui.graphics.Color
 
 val primary_color = Color(0xDD90E27D)
-@SuppressLint("MissingColorAlphaChannel")
+val path_card_color = Color(0xDDD0DBCD)
 val selectable_color = Color(0xE6E0E2)
 //val main_color = Color(0xFF98A1AF)
 //val accent_color = Color(0xFF7994BC)

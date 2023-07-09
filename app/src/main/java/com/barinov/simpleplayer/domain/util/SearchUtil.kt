@@ -1,6 +1,7 @@
 package com.barinov.simpleplayer.domain.util
 
 import android.os.Environment
+import com.barinov.simpleplayer.bytesToMb
 import com.barinov.simpleplayer.domain.EventProvider
 import com.barinov.simpleplayer.domain.FileWorker
 import com.barinov.simpleplayer.domain.model.CommonFileItem
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.File
 
 class SearchUtil(
     private val fileWorker: FileWorker
@@ -24,6 +26,9 @@ class SearchUtil(
 
     override val filesEventFlow = _filesEventFlow.asSharedFlow()
 
+    val defaultInternalFolder: File = Environment.getExternalStorageDirectory()
+
+
     fun autoSearch(
         copyOnInternalStorage: Boolean,
         playListName: String?
@@ -32,7 +37,7 @@ class SearchUtil(
             mutex.withLock {
                 val buffer = mutableListOf<CommonFileItem>()
                 fileWorker.scanWithSubFolders(
-                    Environment.getExternalStorageDirectory().toCommonFileItem(),
+                    defaultInternalFolder.toCommonFileItem(),
                     buffer,
                     playListName
                 )
@@ -40,7 +45,7 @@ class SearchUtil(
                     if (index == 0 && copyOnInternalStorage){
                         _filesEventFlow.emit(
                             FileWorker.FileEvents.OnCopyStarted(
-                                buffer.sumOf { it.len }
+                                buffer.sumOf { it.len }.bytesToMb()
                             )
                         )
                     }
@@ -48,7 +53,7 @@ class SearchUtil(
                 }
                 _filesEventFlow.emit(
                     FileWorker.FileEvents.OnSearchCompleted(
-                        ""
+                        buffer.size
                     )
                 )
             }
@@ -73,7 +78,7 @@ class SearchUtil(
                     if (index == 0 && copyOnInternalStorage){
                         _filesEventFlow.emit(
                             FileWorker.FileEvents.OnCopyStarted(
-                                buffer.sumOf { it.len }
+                                buffer.sumOf { it.len }.bytesToMb()
                             )
                         )
                     }
@@ -81,7 +86,7 @@ class SearchUtil(
                 }
                 _filesEventFlow.emit(
                     FileWorker.FileEvents.OnSearchCompleted(
-                        ""
+                        0
                     )
                 )
             }
@@ -107,7 +112,7 @@ class SearchUtil(
                     if (index == 0 && copyOnInternalStorage){
                         _filesEventFlow.emit(
                             FileWorker.FileEvents.OnCopyStarted(
-                                buffer.sumOf { it.len }
+                                buffer.sumOf { it.len }.bytesToMb()
                             )
                         )
                     }
@@ -115,11 +120,13 @@ class SearchUtil(
                 }
                 _filesEventFlow.emit(
                     FileWorker.FileEvents.OnSearchCompleted(
-                        ""
+                        0
                     )
                 )
             }
         }
     }
+
+
 
 }

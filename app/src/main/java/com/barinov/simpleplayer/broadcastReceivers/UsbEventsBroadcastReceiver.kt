@@ -7,6 +7,8 @@ import com.barinov.simpleplayer.domain.MassStorageProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import me.jahnen.libaums.core.UsbMassStorageDevice
+import me.jahnen.libaums.core.fs.FileSystem
 import me.jahnen.libaums.core.fs.UsbFile
 
 class UsbEventsBroadcastReceiver: BroadcastReceiver(), MassStorageProvider {
@@ -27,10 +29,14 @@ class UsbEventsBroadcastReceiver: BroadcastReceiver(), MassStorageProvider {
         TODO("Not yet implemented")
     }
 
+    override fun getRoot(): Pair<FileSystem, UsbFile> {
+        TODO("Not yet implemented")
+    }
+
     override val mssStorageDeviceAccessibilityFlow = _mssStorageDeviceAccessibilityFlow.asSharedFlow()
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        TODO("Not yet implemented")
+
     }
 
 

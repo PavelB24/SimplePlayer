@@ -42,6 +42,14 @@ fun File.toCommonFileItem(): CommonFileItem {
     return CommonFileItem(signature, length(), RootType.INTERNAL, this, null)
 }
 
+fun CommonFileItem.extractPath(): String{
+    return if(rootType == RootType.INTERNAL){
+        iFile?.path ?: throw IllegalArgumentException()
+    } else {
+        uEntity?.uFile?.absolutePath ?: throw IllegalArgumentException()
+    }
+}
+
 fun UsbFile.toCommonFileItem(fs: FileSystem): CommonFileItem {
     val signature = this.absolutePath + File.separator + name
     return CommonFileItem(signature, length, RootType.USB, null, CommonFileItem.UsbData(this, fs))
@@ -144,16 +152,33 @@ fun Long.sizeBytesToMb(): String{
     return  "${String.format("%.1f", this / (1024.0 * 1024.0))}.mb"
 }
 
+// Len w/o dots
+fun String.ellipsizePath(maxLen: Int): String{
+    if(length <= maxLen) return this
+    for (i in indices){
+        if(this[i] == '/'){
+            if(length - i <= maxLen){
+                return takeLast(length - i)
+            }
+        }
+    }
+    return takeLast(maxLen) + "..."
+}
+
 fun CommonFileItem.getName(): String{
     return if(rootType == RootType.INTERNAL){
         iFile!!.name
     } else uEntity!!.uFile.name
 }
 
-suspend inline fun InputStream.copyWithCallBack(
+fun Long.bytesToMb(): Float{
+    return (this * 1024 * 1024).toFloat()
+}
+
+inline fun InputStream.copyWithCallBack(
     out: OutputStream,
     bufferSize: Int = DEFAULT_BUFFER_SIZE,
-    onBlockCopied:  (Long) -> Unit
+    onBlockCopied:  (Float) -> Unit
 ): Long {
     var bytesCopied: Long = 0
     val buffer = ByteArray(bufferSize)
@@ -161,7 +186,7 @@ suspend inline fun InputStream.copyWithCallBack(
     while (bytes >= 0) {
         out.write(buffer, 0, bytes)
         bytesCopied += bytes
-        onBlockCopied.invoke(bytesCopied)
+        onBlockCopied.invoke(bytesCopied.bytesToMb())
         bytes = read(buffer)
     }
     return bytesCopied

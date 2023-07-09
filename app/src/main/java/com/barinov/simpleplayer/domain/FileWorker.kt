@@ -6,14 +6,7 @@ import com.barinov.simpleplayer.copyWithCallBack
 import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.domain.model.MusicFile
 import com.barinov.simpleplayer.toCommonFileItem
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import me.jahnen.libaums.core.fs.FileSystem
 import me.jahnen.libaums.core.fs.UsbFile
 import me.jahnen.libaums.core.fs.UsbFileStreamFactory
@@ -232,11 +225,15 @@ class FileWorker(
 
     sealed interface FileEvents {
 
-        data class OnCopyStarted(val bytesToCopy: Long): FileEvents
+        object Idle: FileEvents
 
-        data class OnBlockCopied(val totalCopiedSize: Long): FileEvents
+        data class Error(val e: Throwable): FileEvents
 
-        data class OnSearchCompleted(val message: String): FileEvents
+        data class OnCopyStarted(val megaBytesToCopy: Float): FileEvents
+
+        data class OnBlockCopied(val megaBytes: Float): FileEvents
+
+        data class OnSearchCompleted(val count: Int): FileEvents
     }
 
     override fun getInternalStorageRootPath(): String {

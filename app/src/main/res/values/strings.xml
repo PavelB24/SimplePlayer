@@ -8,4 +8,5 @@
     <string name="stop">Player control</string>
     <string name="load_tracks_menu_item">Load tracks</string>
     <string name="about_menu_item">About</string>
+    <string name="copy_on_scan_title">Сopy tracks in application storage</string>
 </resources>

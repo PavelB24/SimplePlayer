@@ -37,7 +37,7 @@ fun FileItem(item: CommonFileItem, interactor: ItemInteractor<CommonFileItem>) {
             .fillMaxWidth()
             .combinedClickable(
                 remember { MutableInteractionSource() },
-                selectableRipple(),
+                selectableRipple(40.dp),
                 onClick = {
                     interactor.onClick(item)
                 },

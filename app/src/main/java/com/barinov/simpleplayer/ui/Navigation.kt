@@ -7,7 +7,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.barinov.simpleplayer.ui.screens.FileBrowser
+import com.barinov.simpleplayer.ui.screens.HomeScreen
 import com.barinov.simpleplayer.ui.viewModel.HostViewModel
+import com.barinov.simpleplayer.ui.viewModel.ScanViewModel
 import org.koin.androidx.compose.getViewModel
 
 @Composable
@@ -17,7 +20,7 @@ fun NavigationHost(
     menuProvider: ScreenProvider,
 ) {
 
-    val hostViewModel: HostViewModel = getViewModel()
+    val hostViewModel: ScanViewModel = getViewModel()
 //    val darkTheme = isSystemInDarkTheme()
     val startScreenState = hostViewModel.startScreenFlow.collectAsState()
 
@@ -33,6 +36,7 @@ fun NavigationHost(
         composable(Screen.ScreenRegister.HOME.name){
             HomeScreen(menuProvider, navController)
         }
+
 
 //        composable(Screen.SETTINGS.name) {
 //            SettingsScreen()

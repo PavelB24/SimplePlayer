@@ -7,16 +7,17 @@ import me.jahnen.libaums.core.fs.UsbFile
 interface MassStorageProvider {
 
 
-     fun openFolder(uFile: UsbFile?)
+
 
     val mssStorageDeviceAccessibilityFlow: SharedFlow<MassStorageState>
 
+    fun openFolder(uFile: UsbFile?)
 
+    fun getRoot(): Pair<FileSystem, UsbFile>
+    sealed class MassStorageState() {
 
-    sealed class MassStorageState(){
+        object NotReady : MassStorageState()
 
-        object NotReady: MassStorageState()
-
-        data class Ready(val uFiles: Pair<FileSystem, List<UsbFile>>): MassStorageState()
+        data class Ready(val uFiles: Pair<FileSystem, List<UsbFile>>) : MassStorageState()
     }
 }

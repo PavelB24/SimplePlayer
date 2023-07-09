@@ -3,8 +3,11 @@ package com.barinov.simpleplayer.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FloatTweenSpec
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
@@ -29,11 +32,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.barinov.simpleplayer.R
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun AlertdialogComponent(
@@ -121,7 +127,7 @@ fun AddFromCurrentDirImageButton(
 }
 
 @Composable
-fun selectableRipple() = rememberRipple(color = selectable_color)
+fun selectableRipple(radius: Dp) = rememberRipple(color = selectable_color, radius = radius)
 
 
 @Composable
@@ -165,12 +171,16 @@ fun WavesAnimatedHome(
     onClick: () -> Unit = {}
 ) {
 
+    val coroutine = rememberCoroutineScope()
     val waves = listOf(
         remember { Animatable(0f) },
         remember { Animatable(0f) },
         remember { Animatable(0f) },
         remember { Animatable(0f) },
     )
+
+    val clickAnim = remember { Animatable(250f) }
+
 
     val animationSpec = infiniteRepeatable<Float>(
         animation = tween(4000, easing = FastOutLinearInEasing),
@@ -185,6 +195,7 @@ fun WavesAnimatedHome(
         }
     }
 
+
     val dys = waves.map { it.value }
 
     Box(
@@ -195,7 +206,7 @@ fun WavesAnimatedHome(
         dys.forEach { dy ->
             Box(
                 Modifier
-                    .size(250.dp)
+                    .size(clickAnim.value.dp)
                     .align(Center)
                     .graphicsLayer {
                         scaleX = dy * 4 + 1
@@ -217,11 +228,26 @@ fun WavesAnimatedHome(
             modifier = Modifier
                 .clickable(
                     remember { MutableInteractionSource() },
-                    selectableRipple()
+                    selectableRipple(50.dp)
                 ) {
-                    onClick.invoke()
+                    coroutine.launch {
+                        clickAnim.animateTo(
+                            300f, animationSpec = FloatTweenSpec(
+                                1000
+                            )
+                        )
+                        if(clickAnim.value == 300f){
+                            clickAnim.animateTo(
+                                250f, animationSpec = FloatTweenSpec(
+                                    500
+                                )
+                            )
+                            onClick.invoke()
+                        }
+                    }
+
                 }
-                .size(250.dp)
+                .size(clickAnim.value.dp)
         )
     }
 
