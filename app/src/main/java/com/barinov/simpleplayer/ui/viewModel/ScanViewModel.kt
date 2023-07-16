@@ -1,12 +1,15 @@
 package com.barinov.simpleplayer.ui.viewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barinov.simpleplayer.domain.FileWorker
 import com.barinov.simpleplayer.domain.MusicRepository
+import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.domain.util.SearchUtil
 import com.barinov.simpleplayer.toCommonFileItem
 import com.barinov.simpleplayer.ui.Screen
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,21 +21,41 @@ class ScanViewModel(
 ) : ViewModel() {
 
 
-    val events: SharedFlow<FileWorker.FileEvents> = searchUtil.filesEventFlow
+    val events: SharedFlow<FileWorker.FileWorkEvents> = searchUtil.filesEventFlow
 
-    val startScreenFlow: StateFlow<Screen.ScreenRegister> =
+    val startScreenFlow: MutableStateFlow<Screen.ScreenRegister> =
         MutableStateFlow(Screen.ScreenRegister.HOME).also {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 if (repository.getTracksCount() > 0) {
-                    Screen.ScreenRegister.PLAYLISTS
-                } else Screen.ScreenRegister.HOME
+                   it.emit(Screen.ScreenRegister.PLAYLISTS)
+                } else  it.emit(Screen.ScreenRegister.HOME)
             }
         }
 
-    fun onComplete() {}
+    fun confirm(
+        copy: Boolean
+    ){
+        searchUtil.confirmAndHandle(copy){
+            viewModelScope.launch(Dispatchers.IO) {
+                Log.d("@@@", "handle")
+//                startScreenFlow.emit(Screen.ScreenRegister.PLAYLISTS)
+            }
+        }
+    }
 
-    fun startScan(){}
+    fun startScan(
+        playList: String,
+        folder: CommonFileItem
+    ){
+        searchUtil.searchWithSubFolders(
+            folder,
+            playList.ifEmpty { null }
+        )
+    }
 
     fun getDefaultRoot() = searchUtil.defaultInternalFolder.toCommonFileItem()
+    fun skipState() {
+        searchUtil.cancelResults()
+    }
 
 }

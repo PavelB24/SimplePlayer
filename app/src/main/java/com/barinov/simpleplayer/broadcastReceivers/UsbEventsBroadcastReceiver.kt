@@ -111,7 +111,6 @@ class UsbEventsBroadcastReceiver(
     }
 
     private fun initDevice(device: UsbDevice) {
-
     }
 
 

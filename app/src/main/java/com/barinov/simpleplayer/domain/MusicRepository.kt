@@ -17,4 +17,6 @@ class MusicRepository(
     }
 
     suspend fun getTrackDataById(id: String) = dao.getTrackById(id)
+    suspend fun findByName(name: String, playlist: String): Boolean = false
+//        dao.findByName(name, playlist)
 }

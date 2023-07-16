@@ -2,6 +2,8 @@ package com.barinov.simpleplayer.domain
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.util.Log
+import com.barinov.simpleplayer.bytesToMb
 import com.barinov.simpleplayer.copyWithCallBack
 import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.domain.model.MusicFile
@@ -20,7 +22,7 @@ class FileWorker(
 ) : InternalPathProvider {
 
 
-    val _filesEventFlow = MutableSharedFlow<FileEvents>()
+    val _filesEventFlow = MutableSharedFlow<FileWorkEvents>()
 
 
     private val folderName = "user_music"
@@ -39,13 +41,15 @@ class FileWorker(
     suspend fun scanWithSubFolders(
         file: CommonFileItem,
         buffer: MutableList<CommonFileItem>,
-        playListName: String?
+        playListName: String
     ) {
 //        if (!file.isDirectory) throw IllegalArgumentException()
         if (file.rootType == RootType.INTERNAL) {
             file.iFile?.apply {
                 if (isFile) {
-                    if (name.endsWith(".mp3")) {
+                    if (name.endsWith(".mp3") &&
+                        !musicRepository.findByName(name, playListName)
+                    ) {
                         buffer.add(toCommonFileItem())
                     }
                 } else {
@@ -102,31 +106,36 @@ class FileWorker(
     suspend fun addValidMusicFile(
         musicFile: CommonFileItem,
         copyOnInternalStorage: Boolean,
-        playListName: String?
+        playListName: String,
+        alreadyCopied: Long,
     ) {
         if (musicFile.rootType == RootType.INTERNAL) {
             musicFile.iFile?.apply {
-                if (!isDirectory) throw IllegalArgumentException()
+                if (!isFile) throw IllegalArgumentException()
                 val metadata = audioDataHandler.getMusicFileMetaData(this)
                 var finalPath = path
                 if (copyOnInternalStorage) {
-                    finalPath = copyInInternal(this)
+                    finalPath = copyInInternal( alreadyCopied, this)
                 }
                 musicRepository.addFileIndex(metadata, finalPath, playListName)
             }
         } else {
             if (!copyOnInternalStorage) throw IllegalArgumentException()
             musicFile.uEntity?.apply {
-                onExternalCopy(uFile, fs, playListName)
+                onExternalCopy(alreadyCopied, uFile, fs, playListName)
             }
         }
     }
 
-    private suspend fun copyExternal(uMusicFile: CommonFileItem.UsbData): String {
-        return copyExternal(uMusicFile.fs, uMusicFile.uFile)
+    private suspend fun copyExternal(alreadyCopied: Long, uMusicFile: CommonFileItem.UsbData): String {
+        return copyExternal(alreadyCopied, uMusicFile.fs, uMusicFile.uFile)
     }
 
-    private suspend fun copyExternal(fs: FileSystem, uMusicFile: UsbFile): String {
+    private suspend fun copyExternal(
+        alreadyCopied: Long,
+        fs: FileSystem,
+        uMusicFile: UsbFile
+    ): String {
         val fileName = uMusicFile.name
         val newPath = "$internalPath${File.separator}$fileName"
         uMusicFile.apply {
@@ -136,8 +145,8 @@ class FileWorker(
                         createNewFile()
                     }
                     outputStream().use { fos ->
-                        fis.copyWithCallBack(fos) {
-                            _filesEventFlow.emit(FileEvents.OnBlockCopied(it))
+                        fis.copyWithCallBack(alreadyCopied, fos) {
+                            _filesEventFlow.emit(FileWorkEvents.OnBlockCopied(it))
                         }
                     }
                 }
@@ -146,22 +155,30 @@ class FileWorker(
         return newPath
     }
 
-    private suspend fun copyInInternal(musicFile: File): String {
+    private suspend fun copyInInternal(
+        alreadyCopied: Long,
+        musicFile: File
+    ):  String {
+        Log.d("@@@", "COPY $musicFile")
         val fileName = musicFile.name
         val newPath = "$internalPath${File.separator}$fileName"
         File(newPath).also { newFile ->
             if (!newFile.isFile) {
                 newFile.createNewFile()
+            } else {
+                newFile.delete()
+                newFile.createNewFile()
             }
             musicFile.inputStream().use { fis ->
                 newFile.outputStream().use { fos ->
-                    fis.copyWithCallBack(fos) {
-                        _filesEventFlow.emit(FileEvents.OnBlockCopied(it))
+                    Log.d("@@@", "COPY ${fis.available().toLong().bytesToMb()}")
+                    fis.copyWithCallBack(alreadyCopied, fos) {
+                        _filesEventFlow.emit(FileWorkEvents.OnBlockCopied(it))
                     }
+                    return newPath
                 }
             }
         }
-        return newPath
     }
 
 
@@ -195,8 +212,10 @@ class FileWorker(
         }
     }
 
-    private suspend fun onExternalCopy(usbFile: UsbFile, fs: FileSystem, playListName: String?) {
-        val finalPath = copyExternal(usbFile.toCommonFileItem(fs).uEntity!!)
+    private suspend fun onExternalCopy(
+        alreadyCopied: Long,
+        usbFile: UsbFile, fs: FileSystem, playListName: String?) {
+        val finalPath = copyExternal(alreadyCopied, usbFile.toCommonFileItem(fs).uEntity!!)
         val metadata = audioDataHandler.getMusicFileMetaData(File(finalPath))
         musicRepository.addFileIndex(metadata, finalPath, playListName)
     }
@@ -223,19 +242,23 @@ class FileWorker(
     }
 
 
-    sealed interface FileEvents {
+    sealed interface FileWorkEvents {
 
-        object Idle: FileEvents
+        object OnSearchStarted : FileWorkEvents
 
-        object NoMusicFound: FileEvents
+        object Idle : FileWorkEvents
 
-        data class Error(val e: Throwable): FileEvents
+        object OnCompleted : FileWorkEvents
 
-        data class OnCopyStarted(val megaBytesToCopy: Float): FileEvents
+        object NoMusicFound : FileWorkEvents
 
-        data class OnBlockCopied(val megaBytes: Float): FileEvents
+        data class Error(val e: Throwable) : FileWorkEvents
 
-        data class OnSearchCompleted(val count: Int): FileEvents
+        data class OnCopyStarted(val megaBytesToCopy: Int) : FileWorkEvents
+
+        data class OnBlockCopied(val megaBytes: Int) : FileWorkEvents
+
+        data class OnSearchCompleted(val count: Int) : FileWorkEvents
     }
 
     override fun getInternalStorageRootPath(): String {

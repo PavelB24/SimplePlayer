@@ -17,7 +17,12 @@ import java.io.File
 
 class SearchUtil(
     private val fileWorker: FileWorker
-): EventProvider {
+) : EventProvider {
+
+    companion object {
+        const val DEFAULT_FOLDER_NAME = "untitled"
+    }
+
     private val mutex = Mutex()
 
     private val utilScope = CoroutineScope(Job() + Dispatchers.IO)
@@ -28,6 +33,50 @@ class SearchUtil(
 
     val defaultInternalFolder: File = Environment.getExternalStorageDirectory()
 
+    private var buffer: Pair<List<CommonFileItem>, String>? = null
+
+
+    fun confirmAndHandle(
+        copyOnInternalStorage: Boolean,
+        onComplete: () -> Unit
+    ) {
+        utilScope.launch {
+            mutex.withLock {
+                buffer?.apply {
+                    var totalCopied = 0L
+                    first.forEachIndexed { index, commonFileItem ->
+                        if (index == 0 && copyOnInternalStorage) {
+                            _filesEventFlow.emit(
+                                FileWorker.FileWorkEvents.OnCopyStarted(
+                                    first.sumOf { it.len }.bytesToMb()
+                                )
+                            )
+                        }
+                        fileWorker.addValidMusicFile(
+                            commonFileItem,
+                            copyOnInternalStorage,
+                            second,
+                            totalCopied
+                        )
+                        totalCopied += commonFileItem.len
+                    }
+                    _filesEventFlow.emit(
+                        FileWorker.FileWorkEvents.OnCompleted
+                    )
+                    onComplete.invoke()
+                }
+            }
+        }
+    }
+
+    fun cancelResults() {
+        utilScope.launch {
+            mutex.withLock {
+                _filesEventFlow.emit(FileWorker.FileWorkEvents.Idle)
+                buffer = null
+            }
+        }
+    }
 
     fun autoSearch(
         copyOnInternalStorage: Boolean,
@@ -35,24 +84,32 @@ class SearchUtil(
     ) {
         utilScope.launch {
             mutex.withLock {
+                _filesEventFlow.emit(FileWorker.FileWorkEvents.OnSearchStarted)
                 val buffer = mutableListOf<CommonFileItem>()
                 fileWorker.scanWithSubFolders(
                     defaultInternalFolder.toCommonFileItem(),
                     buffer,
-                    playListName
+                    playListName ?: DEFAULT_FOLDER_NAME
                 )
+                var totalCopied = 0L
                 buffer.forEachIndexed { index, commonFileItem ->
-                    if (index == 0 && copyOnInternalStorage){
+                    if (index == 0 && copyOnInternalStorage) {
                         _filesEventFlow.emit(
-                            FileWorker.FileEvents.OnCopyStarted(
+                            FileWorker.FileWorkEvents.OnCopyStarted(
                                 buffer.sumOf { it.len }.bytesToMb()
                             )
                         )
                     }
-                    fileWorker.addValidMusicFile(commonFileItem, copyOnInternalStorage, playListName)
+                    fileWorker.addValidMusicFile(
+                        commonFileItem,
+                        copyOnInternalStorage,
+                        playListName ?: DEFAULT_FOLDER_NAME,
+                        totalCopied
+                    )
+                    totalCopied += commonFileItem.len
                 }
                 _filesEventFlow.emit(
-                    FileWorker.FileEvents.OnSearchCompleted(
+                    FileWorker.FileWorkEvents.OnSearchCompleted(
                         buffer.size
                     )
                 )
@@ -62,40 +119,35 @@ class SearchUtil(
 
 
     fun searchWithSubFolders(
-        file: CommonFileItem,
-        copyOnInternalStorage: Boolean,
+        folder: CommonFileItem,
         playListName: String?
     ) {
         utilScope.launch {
             mutex.withLock {
+                _filesEventFlow.emit(FileWorker.FileWorkEvents.OnSearchStarted)
                 val buffer = mutableListOf<CommonFileItem>()
                 fileWorker.scanWithSubFolders(
-                    file,
+                    folder,
                     buffer,
-                    playListName
+                    playListName ?: DEFAULT_FOLDER_NAME
                 )
-                buffer.forEachIndexed { index, commonFileItem ->
-                    if (index == 0 && copyOnInternalStorage){
-                        _filesEventFlow.emit(
-                            FileWorker.FileEvents.OnCopyStarted(
-                                buffer.sumOf { it.len }.bytesToMb()
-                            )
+                if (buffer.isEmpty()) {
+                    _filesEventFlow.emit(FileWorker.FileWorkEvents.NoMusicFound)
+                } else {
+                    this@SearchUtil.buffer = Pair(buffer, playListName ?: DEFAULT_FOLDER_NAME)
+                    _filesEventFlow.emit(
+                        FileWorker.FileWorkEvents.OnSearchCompleted(
+                            buffer.size
                         )
-                    }
-                    fileWorker.addValidMusicFile(commonFileItem, copyOnInternalStorage, playListName)
-                }
-                _filesEventFlow.emit(
-                    FileWorker.FileEvents.OnSearchCompleted(
-                        0
                     )
-                )
+                }
             }
         }
     }
 
 
     fun searchInFolder(
-        file: CommonFileItem,
+        folder: CommonFileItem,
         copyOnInternalStorage: Boolean,
         playListName: String?
     ) {
@@ -103,30 +155,36 @@ class SearchUtil(
             mutex.withLock {
                 val buffer = mutableListOf<CommonFileItem>()
                 fileWorker.scanSelectedFolder(
-                    file,
+                    folder,
                     buffer,
                     copyOnInternalStorage,
                     playListName
                 )
+                var totalCopied = 0L
                 buffer.forEachIndexed { index, commonFileItem ->
-                    if (index == 0 && copyOnInternalStorage){
+                    if (index == 0 && copyOnInternalStorage) {
                         _filesEventFlow.emit(
-                            FileWorker.FileEvents.OnCopyStarted(
+                            FileWorker.FileWorkEvents.OnCopyStarted(
                                 buffer.sumOf { it.len }.bytesToMb()
                             )
                         )
                     }
-                    fileWorker.addValidMusicFile(commonFileItem, copyOnInternalStorage, playListName)
+                    fileWorker.addValidMusicFile(
+                        commonFileItem,
+                        copyOnInternalStorage,
+                        playListName ?: DEFAULT_FOLDER_NAME,
+                        totalCopied
+                    )
+                    totalCopied += commonFileItem.len
                 }
                 _filesEventFlow.emit(
-                    FileWorker.FileEvents.OnSearchCompleted(
+                    FileWorker.FileWorkEvents.OnSearchCompleted(
                         0
                     )
                 )
             }
         }
     }
-
 
 
 }

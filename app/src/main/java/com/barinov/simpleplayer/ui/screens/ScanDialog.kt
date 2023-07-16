@@ -1,5 +1,6 @@
 package com.barinov.simpleplayer.ui.screens
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -39,7 +41,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import com.barinov.simpleplayer.R
 import com.barinov.simpleplayer.domain.FileWorker
-import com.barinov.simpleplayer.domain.RootType
 import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.ellipsizePath
 import com.barinov.simpleplayer.extractPath
@@ -59,15 +60,17 @@ fun ScanDialog(
 
     val viewModel: ScanViewModel = getViewModel()
 
-    val events = viewModel.events.collectAsState(initial = FileWorker.FileEvents.Idle)
+    val events = viewModel.events.collectAsState(initial = FileWorker.FileWorkEvents.Idle)
+
+    Log.d("@@@", "$events")
 
     val sizeToCopy = remember {
-        mutableStateOf(0f)
+        mutableStateOf(0)
     }
 
-     val totalCopy = remember {
-        mutableStateOf(0f)
-    }
+//    val totalCopy = remember {
+//        mutableStateOf(0f)
+//    }
 
 
     val playlistName = rememberSaveable { mutableStateOf("") }
@@ -78,10 +81,22 @@ fun ScanDialog(
     }
     val copyCb = rememberSaveable { mutableStateOf(false) }
 
-    if (events.value is FileWorker.FileEvents.OnCopyStarted) {
-        sizeToCopy.value = (events.value as FileWorker.FileEvents.OnCopyStarted).megaBytesToCopy
-    } else if(events.value is FileWorker.FileEvents.OnBlockCopied){
-        totalCopy.value += (events.value as FileWorker.FileEvents.OnBlockCopied).megaBytes
+
+    when (events.value) {
+        is FileWorker.FileWorkEvents.OnCopyStarted -> {
+            sizeToCopy.value =
+                (events.value as FileWorker.FileWorkEvents.OnCopyStarted).megaBytesToCopy
+        }
+
+//        is FileWorker.FileWorkEvents.OnBlockCopied -> {
+//            totalCopy.value += (events.value as FileWorker.FileWorkEvents.OnBlockCopied).megaBytes
+//        }
+
+        is FileWorker.FileWorkEvents.OnCompleted -> {
+            dialogExtender.value = false
+        }
+
+        else -> {}
     }
 
 
@@ -123,6 +138,7 @@ fun ScanDialog(
                     label = { Text(text = "PlaylistName") },
                     singleLine = true,
                     value = playlistName.value,
+                    enabled = events.value is FileWorker.FileWorkEvents.Idle,
                     onValueChange = {
                         playlistName.value = it
                     })
@@ -164,11 +180,11 @@ fun ScanDialog(
                     ) {
                         Text(
                             modifier = Modifier.padding(start = 16.dp),
+//                            enabled = events.value is FileWorker.FileWorkEvents.Idle,
                             text = searchPath.value.extractPath().ellipsizePath(12),
                             maxLines = 2,
                             fontSize = 22.sp,
                         )
-
                         Image(
                             painter = painterResource(id = R.drawable.folder),
                             contentScale = ContentScale.Crop,
@@ -176,36 +192,63 @@ fun ScanDialog(
                             modifier = Modifier
                                 .padding(end = 8.dp)
                                 .clickable {
-                                    navController.navigate(Screen.ScreenRegister.IMPORT.name)
+                                    if (events.value is FileWorker.FileWorkEvents.Idle) {
+                                        navController.navigate(Screen.ScreenRegister.IMPORT.name)
+                                    } else {
+                                        viewModel.skipState()
+                                        navController.navigate(Screen.ScreenRegister.IMPORT.name)
+                                    }
 
                                 }
                         )
                     }
                 }
 
-                AnimatedVisibility(visible = events.value is FileWorker.FileEvents.OnBlockCopied || events.value is FileWorker.FileEvents.OnCopyStarted) {
+                AnimatedVisibility(visible = events.value is FileWorker.FileWorkEvents.OnBlockCopied || events.value is FileWorker.FileWorkEvents.OnCopyStarted) {
                     Row() {
-                        val modifier = if (events.value is FileWorker.FileEvents.OnBlockCopied) {
-                            Modifier.progressSemantics(
-                                value = (events.value as FileWorker.FileEvents.OnBlockCopied).megaBytes,
-                                valueRange = 0f..sizeToCopy.value
+                        if (events.value is FileWorker.FileWorkEvents.OnBlockCopied) {
+                            Log.d(
+                                "@@@",
+                                "${(events.value as FileWorker.FileWorkEvents.OnBlockCopied).megaBytes}.mb"
                             )
-                        } else {
-                            Modifier
                         }
-                        LinearProgressIndicator(modifier)
+//                        val modifier =
+//                            if (events.value is FileWorker.FileWorkEvents.OnBlockCopied) {
+//                                Modifier.progressSemantics(
+//                                    value = (events.value as FileWorker.FileWorkEvents.OnBlockCopied).megaBytes,
+//                                    valueRange = 0f..sizeToCopy.value
+//                                )
+//                            } else {
+//                                Modifier
+//                            }
+//                        LinearProgressIndicator(modifier)
+                        if (events.value is FileWorker.FileWorkEvents.OnBlockCopied) {
+                            LinearProgressIndicator(((events.value as FileWorker.FileWorkEvents.OnBlockCopied).megaBytes / sizeToCopy.value.toFloat()))
+                        }
                         Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = "${totalCopy.value}.mb/${sizeToCopy.value}mb")
+                        if (events.value is FileWorker.FileWorkEvents.OnBlockCopied) {
+                            Text(
+                                text = "${(events.value as FileWorker.FileWorkEvents.OnBlockCopied).megaBytes}.mb/${sizeToCopy.value}.mb"
+                            )
+                        }
                     }
                 }
 
-                AnimatedVisibility(visible = events.value is FileWorker.FileEvents.OnSearchCompleted || events.value is FileWorker.FileEvents.NoMusicFound) {
-                    Text(text = when (events.value) {
-                        is FileWorker.FileEvents.OnSearchCompleted -> {
-                            stringResource(id = R.string.on_tracks_found,  (events.value as FileWorker.FileEvents.OnSearchCompleted).count)
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Start,
+                    text = when (events.value) {
+                        is FileWorker.FileWorkEvents.OnSearchCompleted -> {
+                            stringResource(
+                                id = R.string.on_tracks_found,
+                                (events.value as FileWorker.FileWorkEvents.OnSearchCompleted).count
+                            )
                         }
 
-                        is FileWorker.FileEvents.NoMusicFound -> {
+                        is FileWorker.FileWorkEvents.NoMusicFound -> {
                             stringResource(id = R.string.on_no_tracks_found)
                         }
 
@@ -213,9 +256,9 @@ fun ScanDialog(
                             ""
                         }
                     }
-                    )
+                )
 
-                }
+//                }
 
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -227,7 +270,7 @@ fun ScanDialog(
                 ) {
                     Button(
                         onClick = { dialogExtender.value = false },
-                        enabled = events.value is FileWorker.FileEvents.Idle || events.value is FileWorker.FileEvents.OnSearchCompleted
+                        enabled = getButtonAccessByState(events.value)
                     ) {
                         Text(text = stringResource(id = android.R.string.cancel))
                     }
@@ -235,31 +278,31 @@ fun ScanDialog(
 
                     Button(
                         onClick = {
-                                  when(events.value){
-                                      is FileWorker.FileEvents.Error -> {}
-                                      FileWorker.FileEvents.Idle -> {
-                                          viewModel.startScan(
-                                              playlistName.value,
-                                              copyCb.value,
-                                              searchPath.value
-                                          )
-                                      }
-                                      is FileWorker.FileEvents.OnSearchCompleted -> {
-                                          viewModel.onComplete()
-                                      }
-                                      else -> {}
-                                  }
+                            when (events.value) {
+                                is FileWorker.FileWorkEvents.Error -> {}
+                                FileWorker.FileWorkEvents.Idle -> {
+                                    viewModel.startScan(
+                                        playlistName.value,
+                                        searchPath.value
+                                    )
+                                }
+
+                                is FileWorker.FileWorkEvents.OnSearchCompleted -> {
+                                    viewModel.confirm(copyCb.value)
+                                }
+
+                                else -> {}
+                            }
                         },
-                        enabled = events.value is FileWorker.FileEvents.Idle || events.value is FileWorker.FileEvents.OnSearchCompleted
+                        enabled = getButtonAccessByState(events.value)
                     ) {
-                        if(events.value is FileWorker.FileEvents.Idle){
+                        if (events.value is FileWorker.FileWorkEvents.Idle) {
                             Text(text = stringResource(id = R.string.start_scan))
                         } else {
                             Text(text = stringResource(id = android.R.string.ok))
                         }
                     }
 
-                    //2 кнопки
                 }
 
 
@@ -268,11 +311,17 @@ fun ScanDialog(
     }
 }
 
+private fun getButtonAccessByState(state: FileWorker.FileWorkEvents): Boolean =
+    state is FileWorker.FileWorkEvents.Idle
+            || state is FileWorker.FileWorkEvents.OnSearchCompleted
+            || state is FileWorker.FileWorkEvents.NoMusicFound
 
 
 private fun extractFolder(
     navController: NavHostController,
     default: CommonFileItem
-): CommonFileItem{
-   return navController.currentBackStackEntry?.savedStateHandle?.get<ArrayList<CommonFileItem>>(PATH_KEY)?.first() ?: default
+): CommonFileItem {
+    return navController.currentBackStackEntry?.savedStateHandle?.get<ArrayList<CommonFileItem>>(
+        PATH_KEY
+    )?.first() ?: default
 }

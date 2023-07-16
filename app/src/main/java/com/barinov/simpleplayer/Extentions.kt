@@ -3,6 +3,7 @@ package com.barinov.simpleplayer
 import android.content.Context
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.IconCompat
@@ -21,6 +22,7 @@ import me.jahnen.libaums.core.fs.UsbFile
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
+import kotlin.math.roundToInt
 
 
 fun List<MusicFile>.musicFileIterator(): MusicFileIterator {
@@ -171,22 +173,26 @@ fun CommonFileItem.getName(): String{
     } else uEntity!!.uFile.name
 }
 
-fun Long.bytesToMb(): Float{
-    return (this * 1024 * 1024).toFloat()
+fun Long.bytesToMb(): Int{
+    return (this / (1024 * 1024.0f)).roundToInt()
 }
 
 inline fun InputStream.copyWithCallBack(
+    alreadyCopied: Long,
     out: OutputStream,
     bufferSize: Int = DEFAULT_BUFFER_SIZE,
-    onBlockCopied:  (Float) -> Unit
+    onBlockCopied:  (Int) -> Unit
 ): Long {
-    var bytesCopied: Long = 0
+    var bytesCopied: Long = alreadyCopied
     val buffer = ByteArray(bufferSize)
     var bytes = read(buffer)
     while (bytes >= 0) {
         out.write(buffer, 0, bytes)
+        val old = bytesCopied
         bytesCopied += bytes
-        onBlockCopied.invoke(bytesCopied.bytesToMb())
+        if (old.bytesToMb() !=  bytesCopied.bytesToMb()){
+            onBlockCopied.invoke(bytesCopied.bytesToMb())
+        }
         bytes = read(buffer)
     }
     return bytesCopied
