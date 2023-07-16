@@ -50,7 +50,7 @@ val module = module {
     }
 
     single {
-        UsbEventsBroadcastReceiver()
+        UsbEventsBroadcastReceiver(androidContext())
     }
 
     single {
@@ -74,7 +74,7 @@ val module = module {
     }
 
     viewModel {
-        FileBrowserViewModel(get<UsbEventsBroadcastReceiver>() as MassStorageProvider, get())
+        FileBrowserViewModel(get<UsbEventsBroadcastReceiver>() as MassStorageProvider)
     }
 
     viewModel{

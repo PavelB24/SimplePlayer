@@ -227,6 +227,8 @@ class FileWorker(
 
         object Idle: FileEvents
 
+        object NoMusicFound: FileEvents
+
         data class Error(val e: Throwable): FileEvents
 
         data class OnCopyStarted(val megaBytesToCopy: Float): FileEvents

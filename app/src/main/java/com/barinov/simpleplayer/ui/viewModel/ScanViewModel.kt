@@ -15,21 +15,23 @@ import kotlinx.coroutines.launch
 class ScanViewModel(
     private val searchUtil: SearchUtil,
     private val repository: MusicRepository,
-): ViewModel() {
-
+) : ViewModel() {
 
 
     val events: SharedFlow<FileWorker.FileEvents> = searchUtil.filesEventFlow
 
-    val startScreenFlow: StateFlow<Screen.ScreenRegister> =  MutableStateFlow(Screen.ScreenRegister.HOME).also {
-        viewModelScope.launch {
-            if(repository.getTracksCount() > 0){
-                Screen.ScreenRegister.PLAYLISTS
-            } else Screen.ScreenRegister.HOME
+    val startScreenFlow: StateFlow<Screen.ScreenRegister> =
+        MutableStateFlow(Screen.ScreenRegister.HOME).also {
+            viewModelScope.launch {
+                if (repository.getTracksCount() > 0) {
+                    Screen.ScreenRegister.PLAYLISTS
+                } else Screen.ScreenRegister.HOME
+            }
         }
-    }
 
-    fun onComplete(){}
+    fun onComplete() {}
+
+    fun startScan(){}
 
     fun getDefaultRoot() = searchUtil.defaultInternalFolder.toCommonFileItem()
 

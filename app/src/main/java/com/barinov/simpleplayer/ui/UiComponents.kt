@@ -1,13 +1,13 @@
 package com.barinov.simpleplayer.ui
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FloatTweenSpec
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
@@ -37,8 +37,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.barinov.simpleplayer.R
-import kotlinx.coroutines.coroutineScope
+import com.barinov.simpleplayer.domain.RootType
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @Composable
@@ -104,67 +105,6 @@ fun AlertDialogMainBlock(
 //        }
 //    }
 //}
-
-
-@Composable
-fun AddFromCurrentDirImageButton(
-    onClick: () -> Unit
-) {
-//    DisposableEffect(key1 = , effect = )
-//    val infiniteTransition = rememberInfiniteTransition()
-//    val animation by infiniteTransition.animateFloat(
-//        initialValue = 60.0f,
-//        targetValue = 70.0f,
-//        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse)
-//    )
-    IconButton(
-        onClick = { onClick.invoke() },
-        Modifier.size(50.dp)
-    ) {
-        Icon(painter = painterResource(id = R.drawable.add_tracks), "")
-//        ExpandedMenu(arrayOf(), {})
-    }
-}
-
-@Composable
-fun selectableRipple(radius: Dp) = rememberRipple(color = selectable_color, radius = radius)
-
-
-@Composable
-fun ExpandedMenu(
-    refs: Array<Int>, //strings
-    onClick: (Int) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    Box {
-        AnimatedVisibility(visible = refs.isNotEmpty()) {
-            IconButton(onClick = {
-                expanded = !expanded
-            }
-            ) {
-                AnimatedMoreIcon()
-//                Icon(Icons.Default.MoreVert, "", tint = Color(0xDDDDDDDD))
-//            Text("DropDown")
-            }
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-//            modifier = Modifier.fillMaxWidth()
-            ) {
-                refs.forEach { label ->
-                    DropdownMenuItem(
-                        onClick = {
-                            expanded = false
-                            onClick(label)
-                        }) {
-                        Text(stringResource(id = label))
-                    }
-                }
-            }
-        }
-    }
-}
-
 
 @Composable
 fun WavesAnimatedHome(
@@ -236,7 +176,7 @@ fun WavesAnimatedHome(
                                 1000
                             )
                         )
-                        if(clickAnim.value == 300f){
+                        if (clickAnim.value == 300f) {
                             clickAnim.animateTo(
                                 250f, animationSpec = FloatTweenSpec(
                                     500
@@ -253,6 +193,117 @@ fun WavesAnimatedHome(
 
 }
 
+@Composable
+fun RotatingRootButton(
+    startValue: RootType,
+    rt: StateFlow<RootType>,
+    onClick: () -> Unit
+
+) {
+    val coroutine = rememberCoroutineScope()
+    var xRotation by remember {
+        mutableStateOf(0f)
+    }
+
+    val rtState = rt.collectAsState()
+
+    IconButton(
+        onClick = {
+            coroutine.launch {
+                animate(
+                    0f,
+                    360f,
+                    animationSpec = tween(800, easing = LinearOutSlowInEasing),
+                    block = { value, _ ->
+                        xRotation = value
+                        if (value in 90f .. 95f) {
+                            Log.d("@@@", "Inv")
+                            onClick.invoke()
+                        }
+
+                    }
+                )
+            }
+        },
+        Modifier
+            .size(50.dp)
+
+    ) {
+        Icon(
+            painter = painterResource(
+                id = if ((rtState.value) == RootType.INTERNAL) {
+                    R.drawable.phone
+                } else {
+                    R.drawable.usb_logo
+                }
+            ),
+            "",
+            tint = Color.Unspecified,
+            modifier = Modifier.graphicsLayer {
+                rotationY = xRotation
+            }
+        )
+    }
+}
+
+@Composable
+fun AddFromCurrentDirImageButton(
+    onClick: () -> Unit
+) {
+//    DisposableEffect(key1 = , effect = )
+//    val infiniteTransition = rememberInfiniteTransition()
+//    val animation by infiniteTransition.animateFloat(
+//        initialValue = 60.0f,
+//        targetValue = 70.0f,
+//        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse)
+//    )
+    IconButton(
+        onClick = { onClick.invoke() },
+        Modifier.size(50.dp)
+    ) {
+        Icon(painter = painterResource(id = R.drawable.add_tracks), "")
+//        ExpandedMenu(arrayOf(), {})
+    }
+}
+
+@Composable
+fun selectableRipple(radius: Dp) = rememberRipple(color = selectable_color, radius = radius)
+
+
+@Composable
+fun ExpandedMenu(
+    refs: Array<Int>, //strings
+    onClick: (Int) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        AnimatedVisibility(visible = refs.isNotEmpty()) {
+            IconButton(onClick = {
+                expanded = !expanded
+            }
+            ) {
+                AnimatedExpandIcon()
+//                Icon(Icons.Default.MoreVert, "", tint = Color(0xDDDDDDDD))
+//            Text("DropDown")
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+//            modifier = Modifier.fillMaxWidth()
+            ) {
+                refs.forEach { label ->
+                    DropdownMenuItem(
+                        onClick = {
+                            expanded = false
+                            onClick(label)
+                        }) {
+                        Text(stringResource(id = label))
+                    }
+                }
+            }
+        }
+    }
+}
 
 
 @Composable
@@ -263,14 +314,19 @@ fun AnimatedExpandButton(
     Icon(Icons.Default.MoreVert, "", tint = Color.White)
 }
 
-@Composable
-fun AnimatedMoreIcon() {
 
-    val dots = listOf(
+@Composable
+fun AnimatedExpandIcon() {
+
+    val dots = arrayOf(
         remember { Animatable(0f) },
         remember { Animatable(0f) },
         remember { Animatable(0f) },
     )
+
+    val dropDownExp = remember {
+        mutableStateOf(false)
+    }
 
 //    val animationSpec = infiniteRepeatable<Float>(
 //        animation = tween(4000, easing = FastOutLinearInEasing),
@@ -301,8 +357,11 @@ fun AnimatedMoreIcon() {
 
     Column(
 //        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
 //        horizontalAlignment = Arrangement.h
+        modifier = Modifier.clickable {
+            dropDownExp.value = !dropDownExp.value
+        }
     ) {
         dys.forEachIndexed { index, dy ->
             Box(

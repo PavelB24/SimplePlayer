@@ -1,5 +1,6 @@
 package com.barinov.simpleplayer.ui
 
+import androidx.compose.animation.VectorConverter
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
@@ -74,7 +75,7 @@ class ScreenProvider {
                     modifier = Modifier.height(48.dp),
                     title = { },
                     elevation = 0.dp,
-                    contentColor = Color.White,
+                    contentColor = Color.Unspecified,
                     backgroundColor = topBarColor,
                     actions = {
                         TopBarExtras()

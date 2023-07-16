@@ -64,6 +64,12 @@ fun ScanDialog(
     val sizeToCopy = remember {
         mutableStateOf(0f)
     }
+
+     val totalCopy = remember {
+        mutableStateOf(0f)
+    }
+
+
     val playlistName = rememberSaveable { mutableStateOf("") }
     val searchPath = remember {
         mutableStateOf(
@@ -74,6 +80,8 @@ fun ScanDialog(
 
     if (events.value is FileWorker.FileEvents.OnCopyStarted) {
         sizeToCopy.value = (events.value as FileWorker.FileEvents.OnCopyStarted).megaBytesToCopy
+    } else if(events.value is FileWorker.FileEvents.OnBlockCopied){
+        totalCopy.value += (events.value as FileWorker.FileEvents.OnBlockCopied).megaBytes
     }
 
 
@@ -187,8 +195,26 @@ fun ScanDialog(
                         }
                         LinearProgressIndicator(modifier)
                         Spacer(modifier = Modifier.width(16.dp))
-                        Text(text = if (events.value is FileWorker.FileEvents.OnBlockCopied) "" else "")
+                        Text(text = "${totalCopy.value}.mb/${sizeToCopy.value}mb")
                     }
+                }
+
+                AnimatedVisibility(visible = events.value is FileWorker.FileEvents.OnSearchCompleted || events.value is FileWorker.FileEvents.NoMusicFound) {
+                    Text(text = when (events.value) {
+                        is FileWorker.FileEvents.OnSearchCompleted -> {
+                            stringResource(id = R.string.on_tracks_found,  (events.value as FileWorker.FileEvents.OnSearchCompleted).count)
+                        }
+
+                        is FileWorker.FileEvents.NoMusicFound -> {
+                            stringResource(id = R.string.on_no_tracks_found)
+                        }
+
+                        else -> {
+                            ""
+                        }
+                    }
+                    )
+
                 }
 
 
@@ -208,10 +234,29 @@ fun ScanDialog(
                     Spacer(modifier = Modifier.width(26.dp))
 
                     Button(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                                  when(events.value){
+                                      is FileWorker.FileEvents.Error -> {}
+                                      FileWorker.FileEvents.Idle -> {
+                                          viewModel.startScan(
+                                              playlistName.value,
+                                              copyCb.value,
+                                              searchPath.value
+                                          )
+                                      }
+                                      is FileWorker.FileEvents.OnSearchCompleted -> {
+                                          viewModel.onComplete()
+                                      }
+                                      else -> {}
+                                  }
+                        },
                         enabled = events.value is FileWorker.FileEvents.Idle || events.value is FileWorker.FileEvents.OnSearchCompleted
                     ) {
-
+                        if(events.value is FileWorker.FileEvents.Idle){
+                            Text(text = stringResource(id = R.string.start_scan))
+                        } else {
+                            Text(text = stringResource(id = android.R.string.ok))
+                        }
                     }
 
                     //2 кнопки

@@ -12,16 +12,15 @@ import com.barinov.simpleplayer.toCommonFileItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import me.jahnen.libaums.core.fs.UsbFile
 
 class FileBrowserViewModel(
     private val massStorageProvider: MassStorageProvider,
-    private val searchUtil: SearchUtil
+//    private val searchUtil: SearchUtil
 ) : ViewModel() {
 
     private val rootTypeFlow: MutableStateFlow<RootType> = MutableStateFlow(RootType.INTERNAL)
 
-    private val massStorageState = massStorageProvider.mssStorageDeviceAccessibilityFlow
+    val massStorageState = massStorageProvider.mssStorageDeviceAccessibilityFlow
 
     private val internalFilesFlow =
         MutableStateFlow(getInternalRoot().listFiles()?.map { it.toCommonFileItem() } ?: listOf())
@@ -36,9 +35,10 @@ class FileBrowserViewModel(
             } else {
                 when (extState) {
                     MassStorageProvider.MassStorageState.NotReady -> intFiles
-                    is MassStorageProvider.MassStorageState.Ready -> extState.uFiles.second.map {
-                        it.toCommonFileItem(extState.uFiles.first)
-                    }
+//                    is MassStorageProvider.MassStorageState.Ready -> extState.uFiles.second.map {
+//                        it.toCommonFileItem(extState.uFiles.first)
+//                    }
+                    is MassStorageProvider.MassStorageState.Ready -> intFiles
                 }
             }
         }
@@ -51,7 +51,7 @@ class FileBrowserViewModel(
     private var currentFolder =
         if (rootTypeFlow.value == RootType.INTERNAL) {
             Environment.getExternalStorageDirectory().toCommonFileItem()
-        } else{
+        } else {
             val massStorageRoot = massStorageProvider.getRoot()
             massStorageRoot.second.toCommonFileItem(massStorageRoot.first)
         }
@@ -59,7 +59,7 @@ class FileBrowserViewModel(
 
     private fun getInternalRoot() = Environment.getExternalStorageDirectory()
 
-    fun autoSearch() = searchUtil.autoSearch(false, null)
+//    fun autoSearch() = searchUtil.autoSearch(false, null)
 
     fun onFolderClicked(folder: CommonFileItem, addInStack: Boolean = true) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -77,6 +77,8 @@ class FileBrowserViewModel(
             }
         }
     }
+
+    fun getRtFlow() = rootTypeFlow.asStateFlow()
 
     private fun getParent(folder: CommonFileItem): CommonFileItem? {
         return if (folder.rootType == RootType.INTERNAL) {
@@ -96,11 +98,15 @@ class FileBrowserViewModel(
         onFolderClicked(last, false)
     }
 
-    fun changeRootType(rootType: RootType) {
-        viewModelScope.launch(Dispatchers.IO) {
-            rootTypeFlow.emit(rootType)
-        }
+    fun changeRootType() {
+        rootTypeFlow.value =
+            if(rootTypeFlow.value == RootType.INTERNAL)
+                RootType.USB
+            else
+                RootType.INTERNAL
     }
+
+    fun getRootType() = rootTypeFlow.value
 
     fun isBackStackGoingToEmpty() = backStack.size - 1 == 0
 

@@ -30,7 +30,11 @@ fun NavigationHost(
     )
     {
         composable(Screen.ScreenRegister.IMPORT.name) {
-            FileBrowser(paddings = paddings , navController = navController, menuProvider = menuProvider)
+            FileBrowser(
+                paddings = paddings,
+                navController = navController,
+                menuProvider = menuProvider
+            )
         }
 
         composable(Screen.ScreenRegister.HOME.name){
