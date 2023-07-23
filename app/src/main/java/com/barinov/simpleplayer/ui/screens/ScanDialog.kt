@@ -359,7 +359,7 @@ private fun extractFolder(
     navController: NavHostController,
     default: CommonFileItem
 ): CommonFileItem {
-    return navController.currentBackStackEntry?.savedStateHandle?.get<ArrayList<CommonFileItem>>(
+    return navController.currentBackStackEntry?.savedStateHandle?.get<Array<CommonFileItem>>(
         PATH_KEY
     )?.first() ?: default
 }
