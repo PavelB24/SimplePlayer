@@ -1,4 +1,4 @@
-package com.barinov.simpleplayer.ui
+package com.barinov.simpleplayer.ui.items
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -8,12 +8,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -26,6 +24,7 @@ import com.barinov.simpleplayer.getName
 import com.barinov.simpleplayer.getSize
 import com.barinov.simpleplayer.isFile
 import com.barinov.simpleplayer.sizeBytesToMb
+import com.barinov.simpleplayer.ui.selectableRipple
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.barinov.simpleplayer.toSystemColorsContainer
+import com.barinov.simpleplayer.ui.theme.primary_color
 
 @Stable
 class ScreenProvider {

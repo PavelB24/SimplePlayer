@@ -4,7 +4,12 @@ import android.content.Context
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.media.session.MediaButtonReceiver
@@ -16,12 +21,13 @@ import com.barinov.simpleplayer.domain.model.MusicFile
 import com.barinov.simpleplayer.service.PlayerMediaService
 import com.barinov.simpleplayer.ui.ColorsContainer
 import com.barinov.simpleplayer.ui.SystemColorsContainer
-import com.barinov.simpleplayer.ui.primary_color
+import com.barinov.simpleplayer.ui.theme.primary_color
 import me.jahnen.libaums.core.fs.FileSystem
 import me.jahnen.libaums.core.fs.UsbFile
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
+import kotlin.math.round
 import kotlin.math.roundToInt
 
 
@@ -40,12 +46,12 @@ inline fun <T> List<T>.indexOrNull(predicate: (T) -> Boolean): Int? {
 }
 
 fun File.toCommonFileItem(): CommonFileItem {
-    val signature = this.path + File.separator + name
+    val signature = name + length().toString()
     return CommonFileItem(signature, length(), RootType.INTERNAL, this, null)
 }
 
-fun CommonFileItem.extractPath(): String{
-    return if(rootType == RootType.INTERNAL){
+fun CommonFileItem.extractPath(): String {
+    return if (rootType == RootType.INTERNAL) {
         iFile?.path ?: throw IllegalArgumentException()
     } else {
         uEntity?.uFile?.absolutePath ?: throw IllegalArgumentException()
@@ -57,7 +63,7 @@ fun UsbFile.toCommonFileItem(fs: FileSystem): CommonFileItem {
     return CommonFileItem(signature, length, RootType.USB, null, CommonFileItem.UsbData(this, fs))
 }
 
-fun ColorsContainer.toSystemColorsContainer(): SystemColorsContainer{
+fun ColorsContainer.toSystemColorsContainer(): SystemColorsContainer {
     return SystemColorsContainer(systemTopUiColor, navBarColor)
 }
 
@@ -134,32 +140,44 @@ fun NotificationCompat.Builder.completeStyling(
     }
 }
 
-fun CommonFileItem.isFile(): Boolean{
-    return if(rootType == RootType.INTERNAL){
+
+fun Modifier.widthPaddingByDisplayMetrics(ctx: Context, percentage: Int): Modifier {
+    if(percentage > 100 || percentage < 0) throw IllegalArgumentException("Percentage value out of bounds")
+    val density =  ctx.resources.displayMetrics.density
+    val screenWidth = ctx.resources.displayMetrics.widthPixels
+    val padding = screenWidth/ density / 100 * percentage
+    return then(
+        Modifier.width(
+            ((screenWidth / density) - padding).dp))
+
+}
+
+fun CommonFileItem.isFile(): Boolean {
+    return if (rootType == RootType.INTERNAL) {
         iFile!!.isFile
     } else {
         uEntity!!.uFile.isDirectory
     }
 }
 
-fun CommonFileItem.getSize(): Long{
-    return if(rootType == RootType.INTERNAL){
+fun CommonFileItem.getSize(): Long {
+    return if (rootType == RootType.INTERNAL) {
         iFile!!.length()
     } else {
         uEntity!!.uFile.length
     }
 }
 
-fun Long.sizeBytesToMb(): String{
-    return  "${String.format("%.1f", this / (1024.0 * 1024.0))}.mb"
+fun Long.sizeBytesToMb(): String {
+    return "${String.format("%.1f", this / (1024.0 * 1024.0))}.mb"
 }
 
 // Len w/o dots
-fun String.ellipsizePath(maxLen: Int): String{
-    if(length <= maxLen) return this
-    for (i in indices){
-        if(this[i] == '/'){
-            if(length - i <= maxLen){
+fun String.ellipsizePath(maxLen: Int): String {
+    if (length <= maxLen) return this
+    for (i in indices) {
+        if (this[i] == '/') {
+            if (length - i <= maxLen) {
                 return takeLast(length - i)
             }
         }
@@ -167,13 +185,13 @@ fun String.ellipsizePath(maxLen: Int): String{
     return takeLast(maxLen) + "..."
 }
 
-fun CommonFileItem.getName(): String{
-    return if(rootType == RootType.INTERNAL){
+fun CommonFileItem.getName(): String {
+    return if (rootType == RootType.INTERNAL) {
         iFile!!.name
     } else uEntity!!.uFile.name
 }
 
-fun Long.bytesToMb(): Int{
+fun Long.bytesToMb(): Int {
     return (this / (1024 * 1024.0f)).roundToInt()
 }
 
@@ -181,7 +199,7 @@ inline fun InputStream.copyWithCallBack(
     alreadyCopied: Long,
     out: OutputStream,
     bufferSize: Int = DEFAULT_BUFFER_SIZE,
-    onBlockCopied:  (Int) -> Unit
+    onBlockCopied: (Int) -> Unit
 ): Long {
     var bytesCopied: Long = alreadyCopied
     val buffer = ByteArray(bufferSize)
@@ -190,7 +208,7 @@ inline fun InputStream.copyWithCallBack(
         out.write(buffer, 0, bytes)
         val old = bytesCopied
         bytesCopied += bytes
-        if (old.bytesToMb() !=  bytesCopied.bytesToMb()){
+        if (old.bytesToMb() != bytesCopied.bytesToMb()) {
             onBlockCopied.invoke(bytesCopied.bytesToMb())
         }
         bytes = read(buffer)

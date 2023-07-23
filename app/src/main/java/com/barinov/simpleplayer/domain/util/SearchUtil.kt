@@ -4,6 +4,9 @@ import android.os.Environment
 import com.barinov.simpleplayer.bytesToMb
 import com.barinov.simpleplayer.domain.EventProvider
 import com.barinov.simpleplayer.domain.FileWorker
+import com.barinov.simpleplayer.domain.MusicRepository
+import com.barinov.simpleplayer.domain.MusicStorageType
+import com.barinov.simpleplayer.domain.StorageDataCreator
 import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.toCommonFileItem
 import kotlinx.coroutines.CoroutineScope
@@ -16,14 +19,17 @@ import kotlinx.coroutines.sync.withLock
 import java.io.File
 
 class SearchUtil(
-    private val fileWorker: FileWorker
+    private val fileWorker: FileWorker,
+    private val musicRepository: MusicRepository
 ) : EventProvider {
 
     companion object {
-        const val DEFAULT_FOLDER_NAME = "untitled"
+        const val DEFAULT_PLAYLIST_NAME = "untitled"
     }
 
     private val mutex = Mutex()
+
+    private val creator: StorageDataCreator by lazy { StorageDataCreator() }
 
     private val utilScope = CoroutineScope(Job() + Dispatchers.IO)
 
@@ -37,6 +43,7 @@ class SearchUtil(
 
 
     fun confirmAndHandle(
+        playListName: String,
         copyOnInternalStorage: Boolean,
         onComplete: () -> Unit
     ) {
@@ -44,20 +51,34 @@ class SearchUtil(
             mutex.withLock {
                 buffer?.apply {
                     var totalCopied = 0L
+                    val id: String =
+                        musicRepository.createPlayListIfNeedAndGetId(playListName.ifEmpty { DEFAULT_PLAYLIST_NAME }) {
+                            creator.createPlaylistEntity(it)
+                        }
                     first.forEachIndexed { index, commonFileItem ->
-                        if (index == 0 && copyOnInternalStorage) {
+                        if (index == 0) {
                             _filesEventFlow.emit(
                                 FileWorker.FileWorkEvents.OnCopyStarted(
-                                    first.sumOf { it.len }.bytesToMb()
+                                    if (copyOnInternalStorage)
+                                        first.sumOf { it.len }.bytesToMb()
+                                    else null
                                 )
                             )
                         }
                         fileWorker.addValidMusicFile(
                             commonFileItem,
                             copyOnInternalStorage,
-                            second,
                             totalCopied
-                        )
+                        ) { metaData, path ->
+                            musicRepository.addFileIndex(
+                                creator.createTrackEntity(
+                                    metaData,
+                                    path,
+                                    id,
+                                    if (copyOnInternalStorage) MusicStorageType.IN_APP else MusicStorageType.EXTERNAL
+                                )
+                            )
+                        }
                         totalCopied += commonFileItem.len
                     }
                     _filesEventFlow.emit(
@@ -68,6 +89,7 @@ class SearchUtil(
             }
         }
     }
+
 
     fun cancelResults() {
         utilScope.launch {
@@ -84,13 +106,23 @@ class SearchUtil(
     ) {
         utilScope.launch {
             mutex.withLock {
+                val id: String =
+                    musicRepository.createPlayListIfNeedAndGetId(playListName ?: DEFAULT_PLAYLIST_NAME ) {
+                        creator.createPlaylistEntity(playListName ?: DEFAULT_PLAYLIST_NAME)
+                    }
                 _filesEventFlow.emit(FileWorker.FileWorkEvents.OnSearchStarted)
                 val buffer = mutableListOf<CommonFileItem>()
                 fileWorker.scanWithSubFolders(
                     defaultInternalFolder.toCommonFileItem(),
-                    buffer,
-                    playListName ?: DEFAULT_FOLDER_NAME
-                )
+                    buffer
+                ) { signature ->
+                    musicRepository.findByName(
+                        signature.title,
+                        playListName ?: DEFAULT_PLAYLIST_NAME,
+                        signature.bitrate,
+                        signature.duration
+                    )
+                }
                 var totalCopied = 0L
                 buffer.forEachIndexed { index, commonFileItem ->
                     if (index == 0 && copyOnInternalStorage) {
@@ -103,9 +135,18 @@ class SearchUtil(
                     fileWorker.addValidMusicFile(
                         commonFileItem,
                         copyOnInternalStorage,
-                        playListName ?: DEFAULT_FOLDER_NAME,
                         totalCopied
-                    )
+                    ) { metaData, path ->
+                        musicRepository.addFileIndex(
+                            creator.createTrackEntity(
+                                metaData,
+                                path,
+                                id,
+                                if (copyOnInternalStorage) MusicStorageType.IN_APP else MusicStorageType.EXTERNAL
+                            )
+
+                        )
+                    }
                     totalCopied += commonFileItem.len
                 }
                 _filesEventFlow.emit(
@@ -128,16 +169,23 @@ class SearchUtil(
                 val buffer = mutableListOf<CommonFileItem>()
                 fileWorker.scanWithSubFolders(
                     folder,
-                    buffer,
-                    playListName ?: DEFAULT_FOLDER_NAME
-                )
+                    buffer
+                ) { signature ->
+                    musicRepository.findByName(
+                        signature.title,
+                        playListName ?: DEFAULT_PLAYLIST_NAME,
+                        signature.bitrate,
+                        signature.duration
+                    )
+                }
                 if (buffer.isEmpty()) {
                     _filesEventFlow.emit(FileWorker.FileWorkEvents.NoMusicFound)
                 } else {
-                    this@SearchUtil.buffer = Pair(buffer, playListName ?: DEFAULT_FOLDER_NAME)
+                    val  filteredBuffer = buffer.distinctBy { it.signatureString }
+                    this@SearchUtil.buffer = Pair(filteredBuffer, playListName ?: DEFAULT_PLAYLIST_NAME)
                     _filesEventFlow.emit(
                         FileWorker.FileWorkEvents.OnSearchCompleted(
-                            buffer.size
+                            filteredBuffer.size
                         )
                     )
                 }
@@ -149,16 +197,18 @@ class SearchUtil(
     fun searchInFolder(
         folder: CommonFileItem,
         copyOnInternalStorage: Boolean,
-        playListName: String?
+        playListName: String
     ) {
         utilScope.launch {
             mutex.withLock {
+                val id: String =
+                    musicRepository.createPlayListIfNeedAndGetId(playListName.ifEmpty { DEFAULT_PLAYLIST_NAME }) {
+                        creator.createPlaylistEntity(playListName)
+                    }
                 val buffer = mutableListOf<CommonFileItem>()
                 fileWorker.scanSelectedFolder(
                     folder,
-                    buffer,
-                    copyOnInternalStorage,
-                    playListName
+                    buffer
                 )
                 var totalCopied = 0L
                 buffer.forEachIndexed { index, commonFileItem ->
@@ -172,9 +222,17 @@ class SearchUtil(
                     fileWorker.addValidMusicFile(
                         commonFileItem,
                         copyOnInternalStorage,
-                        playListName ?: DEFAULT_FOLDER_NAME,
                         totalCopied
-                    )
+                    ) { metaData, path ->
+                        musicRepository.addFileIndex(
+                            creator.createTrackEntity(
+                                metaData,
+                                path,
+                                id,
+                                if (copyOnInternalStorage) MusicStorageType.IN_APP else MusicStorageType.EXTERNAL
+                            )
+                        )
+                    }
                     totalCopied += commonFileItem.len
                 }
                 _filesEventFlow.emit(

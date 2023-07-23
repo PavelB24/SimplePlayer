@@ -26,7 +26,8 @@ fun NavigationHost(
 
     NavHost(
         navController = navController,
-        startDestination = startScreenState.value.name
+//        startDestination = startScreenState.value.name
+        startDestination = Screen.ScreenRegister.HOME.name
     )
     {
         composable(Screen.ScreenRegister.IMPORT.name) {

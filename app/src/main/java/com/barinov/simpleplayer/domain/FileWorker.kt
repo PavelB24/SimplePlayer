@@ -7,6 +7,7 @@ import com.barinov.simpleplayer.bytesToMb
 import com.barinov.simpleplayer.copyWithCallBack
 import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.domain.model.MusicFile
+import com.barinov.simpleplayer.domain.model.MusicFileMetaData
 import com.barinov.simpleplayer.toCommonFileItem
 import kotlinx.coroutines.flow.MutableSharedFlow
 import me.jahnen.libaums.core.fs.FileSystem
@@ -16,7 +17,6 @@ import java.io.File
 
 class FileWorker(
     context: Context,
-    private val musicRepository: MusicRepository,
     private val audioDataHandler: AudioDataHandler,
     private val mediaEngine: TrackRemover
 ) : InternalPathProvider {
@@ -41,14 +41,16 @@ class FileWorker(
     suspend fun scanWithSubFolders(
         file: CommonFileItem,
         buffer: MutableList<CommonFileItem>,
-        playListName: String
+        checkOnLoaded: suspend (Signature) -> Boolean,
     ) {
 //        if (!file.isDirectory) throw IllegalArgumentException()
         if (file.rootType == RootType.INTERNAL) {
             file.iFile?.apply {
                 if (isFile) {
+                    val signature =
+                        audioDataHandler.getShortSignature(this)
                     if (name.endsWith(".mp3") &&
-                        !musicRepository.findByName(name, playListName)
+                        !checkOnLoaded(signature)
                     ) {
                         buffer.add(toCommonFileItem())
                     }
@@ -57,7 +59,7 @@ class FileWorker(
                         scanWithSubFolders(
                             it.toCommonFileItem(),
                             buffer,
-                            playListName
+                            checkOnLoaded
                         )
                     }
                 }
@@ -73,7 +75,7 @@ class FileWorker(
                         scanWithSubFolders(
                             it.toCommonFileItem(fs),
                             buffer,
-                            playListName
+                            checkOnLoaded
                         )
                     }
                 }
@@ -82,12 +84,16 @@ class FileWorker(
     }
 
 
-    suspend fun deleteFiles(mFiles: List<MusicFile>, deleteFile: Boolean) {
+    suspend fun deleteFiles(
+        mFiles: List<MusicFile>,
+        deleteFile: Boolean,
+        onReadyToDelete: (String) -> Unit
+    ) {
         mFiles.forEach {
             mediaEngine.deleteFromCurrentPlayBack(it)
             if (mediaEngine.getCurrentTrackId() != it.id) {
                 deleteFile(it, deleteFile)
-                musicRepository.deleteMusicFileIndexById(it.id)
+                onReadyToDelete(it.id)
             } else {
                 deleteFile(it, deleteFile)
             }
@@ -106,8 +112,8 @@ class FileWorker(
     suspend fun addValidMusicFile(
         musicFile: CommonFileItem,
         copyOnInternalStorage: Boolean,
-        playListName: String,
         alreadyCopied: Long,
+        onHandled: suspend (MusicFileMetaData, String) -> Unit
     ) {
         if (musicFile.rootType == RootType.INTERNAL) {
             musicFile.iFile?.apply {
@@ -117,12 +123,13 @@ class FileWorker(
                 if (copyOnInternalStorage) {
                     finalPath = copyInInternal( alreadyCopied, this)
                 }
-                musicRepository.addFileIndex(metadata, finalPath, playListName)
+                onHandled.invoke(metadata, finalPath)
             }
         } else {
             if (!copyOnInternalStorage) throw IllegalArgumentException()
             musicFile.uEntity?.apply {
-                onExternalCopy(alreadyCopied, uFile, fs, playListName)
+                val extCopyResult = onExternalCopy(alreadyCopied, uFile, fs)
+                onHandled.invoke(extCopyResult.second, extCopyResult.first)
             }
         }
     }
@@ -184,9 +191,7 @@ class FileWorker(
 
     fun scanSelectedFolder(
         musicFile: CommonFileItem,
-        buffer: MutableList<CommonFileItem>,
-        copyOnInternalStorage: Boolean,
-        playListName: String?
+        buffer: MutableList<CommonFileItem>
     ) {
         if (musicFile.rootType == RootType.INTERNAL) {
             musicFile.iFile?.apply {
@@ -212,24 +217,20 @@ class FileWorker(
         }
     }
 
+
+
     private suspend fun onExternalCopy(
         alreadyCopied: Long,
-        usbFile: UsbFile, fs: FileSystem, playListName: String?) {
+        usbFile: UsbFile,
+        fs: FileSystem,
+    ): Pair<String, MusicFileMetaData> {
         val finalPath = copyExternal(alreadyCopied, usbFile.toCommonFileItem(fs).uEntity!!)
         val metadata = audioDataHandler.getMusicFileMetaData(File(finalPath))
-        musicRepository.addFileIndex(metadata, finalPath, playListName)
+        return finalPath to metadata
     }
 
 
-    fun checkExist(paths: List<String>): List<File> {
-        val existingFiles = mutableListOf<File>()
-        paths.map { File(it) }.forEach {
-            if (it.isFile) {
-                existingFiles.add(it)
-            }
-        }
-        return existingFiles
-    }
+
 
 
     fun checkExist(path: String): Boolean = File(path).isFile
@@ -241,6 +242,12 @@ class FileWorker(
         }
     }
 
+
+    data class Signature(
+        val title: String,
+        val bitrate: String,
+        val duration: Long
+    )
 
     sealed interface FileWorkEvents {
 
@@ -254,7 +261,7 @@ class FileWorker(
 
         data class Error(val e: Throwable) : FileWorkEvents
 
-        data class OnCopyStarted(val megaBytesToCopy: Int) : FileWorkEvents
+        data class OnCopyStarted(val megaBytesToCopy: Int?) : FileWorkEvents
 
         data class OnBlockCopied(val megaBytes: Int) : FileWorkEvents
 

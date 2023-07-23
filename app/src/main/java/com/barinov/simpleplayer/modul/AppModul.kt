@@ -30,7 +30,7 @@ const val DATA_BASE_NAME = "simple_player_db"
 val module = module {
 
     single {
-        SearchUtil(get())
+        SearchUtil(get(), get())
     }
 
     single {
@@ -38,7 +38,7 @@ val module = module {
     }
 
     single {
-        FileWorker(androidContext(), get(), get(), get<MediaEngine>() as TrackRemover)
+        FileWorker(androidContext(), get(), get<MediaEngine>() as TrackRemover)
     }
 
     single {

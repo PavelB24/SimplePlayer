@@ -2,6 +2,7 @@ package com.barinov.simpleplayer.ui.screens
 
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,11 +14,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.progressSemantics
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.Checkbox
+import androidx.compose.material.CheckboxColors
+import androidx.compose.material.CheckboxDefaults
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -30,10 +37,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -45,9 +55,13 @@ import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.ellipsizePath
 import com.barinov.simpleplayer.extractPath
 import com.barinov.simpleplayer.ui.Screen
-import com.barinov.simpleplayer.ui.path_card_color
+import com.barinov.simpleplayer.ui.theme.path_card_color
+import com.barinov.simpleplayer.ui.theme.pb_color
+import com.barinov.simpleplayer.ui.theme.primary_color
 import com.barinov.simpleplayer.ui.viewModel.ScanViewModel
+import com.barinov.simpleplayer.widthPaddingByDisplayMetrics
 import org.koin.androidx.compose.getViewModel
+import kotlin.math.roundToInt
 
 
 const val PATH_KEY = "path"
@@ -62,7 +76,6 @@ fun ScanDialog(
 
     val events = viewModel.events.collectAsState(initial = FileWorker.FileWorkEvents.Idle)
 
-    Log.d("@@@", "$events")
 
     val sizeToCopy = remember {
         mutableStateOf(0)
@@ -85,7 +98,7 @@ fun ScanDialog(
     when (events.value) {
         is FileWorker.FileWorkEvents.OnCopyStarted -> {
             sizeToCopy.value =
-                (events.value as FileWorker.FileWorkEvents.OnCopyStarted).megaBytesToCopy
+                (events.value as FileWorker.FileWorkEvents.OnCopyStarted).megaBytesToCopy ?:0
         }
 
 //        is FileWorker.FileWorkEvents.OnBlockCopied -> {
@@ -103,18 +116,25 @@ fun ScanDialog(
     Dialog(
         onDismissRequest = { dialogExtender.value = false },
         properties = DialogProperties(
+            usePlatformDefaultWidth = false,
             dismissOnBackPress = false,
             dismissOnClickOutside = false
         )
     ) {
-
-        Box(
-            modifier = Modifier.background(Color.White),
-            contentAlignment = Alignment.Center
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier
+//                .background(Color.White)
+                .widthPaddingByDisplayMetrics(LocalContext.current, 15)
+                .animateContentSize(),
+//            elevation = 8.dp
+//            contentAlignment = Alignment.Center
         ) {
 
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -149,7 +169,11 @@ fun ScanDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Checkbox(checked = copyCb.value, onCheckedChange = { copyCb.value = it })
+                    Checkbox(
+                        checked = copyCb.value,
+                        onCheckedChange = { copyCb.value = it },
+                        colors = CheckboxDefaults.colors(checkmarkColor = Color.White, checkedColor = pb_color, uncheckedColor = Color.Gray)
+                    )
                     Spacer(modifier = Modifier.width(22.dp))
                     Text(
                         text = stringResource(id = R.string.copy_on_scan_title),
@@ -204,14 +228,21 @@ fun ScanDialog(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(26.dp))
+
                 AnimatedVisibility(visible = events.value is FileWorker.FileWorkEvents.OnBlockCopied || events.value is FileWorker.FileWorkEvents.OnCopyStarted) {
-                    Row() {
-                        if (events.value is FileWorker.FileWorkEvents.OnBlockCopied) {
-                            Log.d(
-                                "@@@",
-                                "${(events.value as FileWorker.FileWorkEvents.OnBlockCopied).megaBytes}.mb"
-                            )
-                        }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+//                        if (events.value is FileWorker.FileWorkEvents.OnBlockCopied) {
+//                            Log.d(
+//                                "@@@",
+//                                "${(events.value as FileWorker.FileWorkEvents.OnBlockCopied).megaBytes}.mb"
+//                            )
+//                        }
 //                        val modifier =
 //                            if (events.value is FileWorker.FileWorkEvents.OnBlockCopied) {
 //                                Modifier.progressSemantics(
@@ -222,16 +253,23 @@ fun ScanDialog(
 //                                Modifier
 //                            }
 //                        LinearProgressIndicator(modifier)
-                        if (events.value is FileWorker.FileWorkEvents.OnBlockCopied) {
-                            LinearProgressIndicator(((events.value as FileWorker.FileWorkEvents.OnBlockCopied).megaBytes / sizeToCopy.value.toFloat()))
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        if (events.value is FileWorker.FileWorkEvents.OnBlockCopied) {
-                            Text(
-                                text = "${(events.value as FileWorker.FileWorkEvents.OnBlockCopied).megaBytes}.mb/${sizeToCopy.value}.mb"
-                            )
-                        }
+                    if (events.value is FileWorker.FileWorkEvents.OnBlockCopied) {
+                        LinearProgressIndicator(
+                            ((events.value as FileWorker.FileWorkEvents.OnBlockCopied).megaBytes / sizeToCopy.value.toFloat()),
+                            color = pb_color,
+                            modifier = Modifier.weight(0.6f)
+                        )
                     }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    if (events.value is FileWorker.FileWorkEvents.OnBlockCopied) {
+                        Text(
+                            text = "${(events.value as FileWorker.FileWorkEvents.OnBlockCopied).megaBytes}mb/${sizeToCopy.value}mb",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(0.4f)
+                        )
+                    }
+                }
                 }
 
                 Text(
@@ -288,7 +326,7 @@ fun ScanDialog(
                                 }
 
                                 is FileWorker.FileWorkEvents.OnSearchCompleted -> {
-                                    viewModel.confirm(copyCb.value)
+                                    viewModel.confirm(copyCb.value, playlistName.value)
                                 }
 
                                 else -> {}

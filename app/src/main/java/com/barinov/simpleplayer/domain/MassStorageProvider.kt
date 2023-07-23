@@ -9,15 +9,15 @@ interface MassStorageProvider {
 
 
 
-    val mssStorageDeviceAccessibilityFlow: StateFlow<MassStorageState>
+    val massStorageDataFlow: StateFlow<MassStorageState>
 
-    fun openFolder(uFile: UsbFile?)
+    suspend fun openFolder(uFile: UsbFile?)
 
-    fun getRoot(): Pair<FileSystem, UsbFile>
+    fun getRoot(): Pair<FileSystem, UsbFile>?
     sealed class MassStorageState() {
 
         object NotReady : MassStorageState()
 
-        data class Ready(val uFiles: Pair<FileSystem, List<UsbFile>>) : MassStorageState()
+        data class Ready(val uFiles: Pair<FileSystem, Array<UsbFile>>) : MassStorageState()
     }
 }

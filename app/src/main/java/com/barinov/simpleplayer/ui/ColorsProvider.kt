@@ -3,6 +3,7 @@ package com.barinov.simpleplayer.ui
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.barinov.simpleplayer.ui.theme.primary_color
 
 object ColorsProvider {
 

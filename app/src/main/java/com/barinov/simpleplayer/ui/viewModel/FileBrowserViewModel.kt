@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.barinov.simpleplayer.domain.RootType
 import com.barinov.simpleplayer.domain.MassStorageProvider
 import com.barinov.simpleplayer.domain.model.CommonFileItem
-import com.barinov.simpleplayer.domain.util.SearchUtil
 import com.barinov.simpleplayer.isFile
 import com.barinov.simpleplayer.toCommonFileItem
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +19,7 @@ class FileBrowserViewModel(
 
     private val rootTypeFlow: MutableStateFlow<RootType> = MutableStateFlow(RootType.INTERNAL)
 
-    val massStorageState = massStorageProvider.mssStorageDeviceAccessibilityFlow
+    val massStorageState = massStorageProvider.massStorageDataFlow
 
     private val internalFilesFlow =
         MutableStateFlow(getInternalRoot().listFiles()?.map { it.toCommonFileItem() } ?: listOf())
@@ -35,10 +34,10 @@ class FileBrowserViewModel(
             } else {
                 when (extState) {
                     MassStorageProvider.MassStorageState.NotReady -> intFiles
-//                    is MassStorageProvider.MassStorageState.Ready -> extState.uFiles.second.map {
-//                        it.toCommonFileItem(extState.uFiles.first)
-//                    }
-                    is MassStorageProvider.MassStorageState.Ready -> intFiles
+                    is MassStorageProvider.MassStorageState.Ready -> extState.uFiles.second.map {
+                        it.toCommonFileItem(extState.uFiles.first)
+                    }
+//                    is MassStorageProvider.MassStorageState.Ready -> intFiles
                 }
             }
         }
@@ -53,7 +52,7 @@ class FileBrowserViewModel(
             Environment.getExternalStorageDirectory().toCommonFileItem()
         } else {
             val massStorageRoot = massStorageProvider.getRoot()
-            massStorageRoot.second.toCommonFileItem(massStorageRoot.first)
+            massStorageRoot?.second?.toCommonFileItem(massStorageRoot.first)
         }
 
 
@@ -114,8 +113,13 @@ class FileBrowserViewModel(
 
     }
 
-    fun peekFolder(folder: CommonFileItem? = null): ArrayList<CommonFileItem> {
-        return arrayListOf(folder ?: currentFolder)
+    fun peekFolder(folder: CommonFileItem? = null): Array<CommonFileItem> {
+        val entry = folder ?: currentFolder
+        return if(entry == null){
+            emptyArray()
+        } else {
+            arrayOf(entry)
+        }
     }
 
 

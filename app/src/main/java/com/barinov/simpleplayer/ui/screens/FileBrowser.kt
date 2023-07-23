@@ -23,14 +23,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.barinov.simpleplayer.base.ItemInteractor
-import com.barinov.simpleplayer.domain.RootType
 import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.isFile
 import com.barinov.simpleplayer.toSystemColorsContainer
 import com.barinov.simpleplayer.ui.ArgsContainer
 import com.barinov.simpleplayer.ui.ColorsProvider
-import com.barinov.simpleplayer.ui.FileItem
-import com.barinov.simpleplayer.ui.menuFactory.MenuFactory
+import com.barinov.simpleplayer.ui.items.FileItem
 import com.barinov.simpleplayer.ui.Screen
 import com.barinov.simpleplayer.ui.ScreenProvider
 import com.barinov.simpleplayer.ui.TopBarConnector
@@ -114,7 +112,7 @@ fun FileBrowser(
         ) {
             items(
                 items = files,
-                key = { it.signature },
+                key = { it.signatureString },
                 itemContent = {
                     FileItem(item = it, interactor = interactor)
                 }

@@ -33,11 +33,11 @@ class ScanViewModel(
         }
 
     fun confirm(
-        copy: Boolean
+        copy: Boolean,
+        plName: String
     ){
-        searchUtil.confirmAndHandle(copy){
+        searchUtil.confirmAndHandle(plName, copy){
             viewModelScope.launch(Dispatchers.IO) {
-                Log.d("@@@", "handle")
 //                startScreenFlow.emit(Screen.ScreenRegister.PLAYLISTS)
             }
         }

@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.barinov.simpleplayer.R
 import com.barinov.simpleplayer.domain.RootType
+import com.barinov.simpleplayer.ui.theme.selectable_color
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
