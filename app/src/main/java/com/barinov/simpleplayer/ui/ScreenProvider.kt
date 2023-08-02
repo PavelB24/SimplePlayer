@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.barinov.simpleplayer.toSystemColorsContainer
+import com.barinov.simpleplayer.ui.components.TopBarBackButton
 import com.barinov.simpleplayer.ui.theme.primary_color
 
 @Stable
@@ -28,8 +29,8 @@ class ScreenProvider {
     fun onScreenEnter(
         screen: Screen.ScreenRegister,
         Fab: @Composable () -> Unit = {},
+        NavIcon: @Composable () -> Unit = {},
         colors: SystemColorsContainer,
-        TopNavigationIcon: @Composable () -> Unit = {},
         TopBarExtras: @Composable () -> Unit = {},
     ) {
         _currentScreen.value = when (screen) {
@@ -38,6 +39,7 @@ class ScreenProvider {
             )
             Screen.ScreenRegister.IMPORT -> Screen.Import(
                 AppBarComponentFactory.obtainAppBarComponent(
+                    NavIcon = {NavIcon()},
                     TopBarExtras = TopBarExtras
                 ),
                 backgroundContainer = colors
@@ -45,6 +47,7 @@ class ScreenProvider {
 
             Screen.ScreenRegister.PLAYLISTS -> Screen.Playlists(
                 AppBarComponentFactory.obtainAppBarComponent(
+                    NavIcon = {NavIcon()},
                     TopBarExtras = TopBarExtras
                 ),
                 backgroundContainer = colors
@@ -52,12 +55,14 @@ class ScreenProvider {
 
             Screen.ScreenRegister.SELECTED_PLAY_LIST -> Screen.TrackDetails(
                 AppBarComponentFactory.obtainAppBarComponent(
+                    NavIcon = {NavIcon()},
                     TopBarExtras = TopBarExtras
                 ),
                 backgroundContainer = colors
             )
 
             Screen.ScreenRegister.TRACK_DETAILS -> TODO()
+            Screen.ScreenRegister.SCAN -> TODO()
         }
     }
 
@@ -67,12 +72,12 @@ class ScreenProvider {
 
         fun obtainAppBarComponent(
             topBarColor: Color = primary_color,
+            NavIcon: @Composable () -> Unit = {},
             TopBarExtras: @Composable () -> Unit = {},
-            TopNavigationIcon: @Composable () -> Unit = {}
         ): @Composable () -> Unit {
             return {
                 TopAppBar(
-                    navigationIcon = { TopNavigationIcon() },
+                    navigationIcon = { NavIcon() },
                     modifier = Modifier.height(48.dp),
                     title = { },
                     elevation = 0.dp,

@@ -7,6 +7,7 @@ import androidx.room.Query
 import com.barinov.simpleplayer.domain.model.CheckableTrackInfo
 import com.barinov.simpleplayer.domain.model.PlaylistEntity
 import com.barinov.simpleplayer.domain.model.TrackEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MusicTracksDao {
@@ -35,5 +36,13 @@ interface MusicTracksDao {
 
     @Query("SELECT COUNT(*) FROM tracks WHERE title =:name AND duration =:duration AND bitrate =:bitrate AND play_list_id == (SELECT id FROM playlists WHERE :playlistName == name)")
     suspend fun findByName(name: String, playlistName: String, bitrate: String, duration: Long): Int
+
+    @Query("SELECT * FROM tracks")
+    fun allTracks(): Flow<TrackEntity>
+    @Query("SELECT * FROM tracks WHERE play_list_id =:id")
+    fun getTracksByPlayListId(id: String): Flow<TrackEntity>
+
+    @Query("SELECT * FROM playlists")
+    fun allPlayLists(): Flow<PlaylistEntity>
 
 }

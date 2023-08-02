@@ -1,4 +1,4 @@
-package com.barinov.simpleplayer.ui.items
+package com.barinov.simpleplayer.ui.components.items
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -24,7 +24,7 @@ import com.barinov.simpleplayer.getName
 import com.barinov.simpleplayer.getSize
 import com.barinov.simpleplayer.isFile
 import com.barinov.simpleplayer.sizeBytesToMb
-import com.barinov.simpleplayer.ui.selectableRipple
+import com.barinov.simpleplayer.ui.components.selectableRipple
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

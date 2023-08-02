@@ -2,13 +2,11 @@ package com.barinov.simpleplayer.modul
 
 import android.content.Context
 import androidx.room.Room
-import androidx.room.RoomDatabase
 import com.barinov.simpleplayer.broadcastReceivers.UsbEventsBroadcastReceiver
 import com.barinov.simpleplayer.core.MediaController
 import com.barinov.simpleplayer.core.MediaEngine
 import com.barinov.simpleplayer.data.LocalDataBase
 import com.barinov.simpleplayer.domain.AudioDataHandler
-import com.barinov.simpleplayer.domain.EventProvider
 import com.barinov.simpleplayer.domain.FileWorker
 import com.barinov.simpleplayer.domain.MassStorageProvider
 import com.barinov.simpleplayer.domain.MusicRepository
@@ -16,9 +14,8 @@ import com.barinov.simpleplayer.domain.Player
 import com.barinov.simpleplayer.domain.TrackRemover
 import com.barinov.simpleplayer.domain.util.SearchUtil
 import com.barinov.simpleplayer.prefs.PreferencesManager
-import com.barinov.simpleplayer.ui.viewModel.FileBrowserViewModel
-import com.barinov.simpleplayer.ui.viewModel.HostViewModel
-import com.barinov.simpleplayer.ui.viewModel.ScanViewModel
+import com.barinov.simpleplayer.ui.viewModels.FileBrowserViewModel
+import com.barinov.simpleplayer.ui.viewModels.ScanViewModel
 import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel

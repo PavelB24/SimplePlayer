@@ -1,4 +1,4 @@
-package com.barinov.simpleplayer.ui
+package com.barinov.simpleplayer.ui.components
 
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
@@ -31,11 +31,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
 import com.barinov.simpleplayer.R
 import com.barinov.simpleplayer.domain.RootType
 import com.barinov.simpleplayer.ui.theme.selectable_color
@@ -43,74 +40,27 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-@Composable
-fun AlertdialogComponent(
-    onDismissRequest: () -> Unit,
-    title: @Composable () -> Unit,
-    icon: @Composable (() -> Unit)? = null, //if null then ignore above
-    msg: @Composable () -> Unit,
-    dismissButton: @Composable () -> Unit,
-    confirmButton: @Composable () -> Unit,
-    properties: DialogProperties? //if null then ignore above
-) {
-    val openDialog by remember { mutableStateOf(false) }
-    if (!openDialog) {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = title,
-            text = msg,
-            dismissButton = dismissButton,
-            confirmButton = confirmButton,
-        )
-    }
-}
+
+
+
 
 @Composable
-fun AlertDialogMainBlock(
-    messageRef: Int,
-    checkedOnStart: Boolean,
-    onCheckChanged: (Boolean) -> Unit
-) {
-    Column() {
-        Text(
-            text = stringResource(id = messageRef),
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            fontSize = 22.sp
-        )
-        Spacer(modifier = Modifier.height(18.dp))
-        Checkbox(checked = checkedOnStart, onCheckedChange = {
-            onCheckChanged.invoke(it)
-        })
-    }
-}
-
-//@Composable
-//fun AlertDialogButtonsBlock(
-//    onClick: DialogButtonActionsWithCheckBox<Boolean>,
-//    checkState: Boolean
-//){
+fun TrackPlayInfo(){
+    //ControlButtons
 //    Row() {
-//        ElevatedButton(onClick = {
-//            onClick.onPositiveButtonClicked(checkState)
-//        }) {
-//            Text(text = stringResource(id = android.R.string.cancel))
-//        }
 //
-//        Spacer(modifier = Modifier.width(26.dp))
-//
-//        ElevatedButton(onClick = {
-//            onClick.onPositiveButtonClicked(checkState)
-//        }) {
-//            Text(text = stringResource(id = android.R.string.ok))
-//        }
 //    }
-//}
+//
+//    Row {
+//        LinearProgressIndicator(progress = )
+//    }
+}
 
 @Composable
 fun WavesAnimatedHome(
     onClick: () -> Unit = {}
 ) {
+    
 
     val coroutine = rememberCoroutineScope()
     val waves = listOf(
@@ -194,6 +144,24 @@ fun WavesAnimatedHome(
 
 }
 
+
+@Composable
+fun TopBarBackButton(
+    onPressed: () -> Unit
+){
+    IconButton(
+        onClick = { onPressed() },
+        Modifier.padding(start = 12.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.baseline_arrow_back),
+            contentDescription = "back",
+            tint = Color.White,
+            modifier = Modifier.size(40.dp)
+        )
+    }
+}
+
 @Composable
 fun RotatingRootButton(
     startValue: RootType,
@@ -260,9 +228,13 @@ fun AddFromCurrentDirImageButton(
 //    )
     IconButton(
         onClick = { onClick.invoke() },
-        Modifier.size(50.dp)
+        Modifier.size(50.dp).padding(end = 12.dp)
     ) {
-        Icon(painter = painterResource(id = R.drawable.add_tracks), "")
+        Icon(painter = painterResource(
+            id = R.drawable.add_tracks),
+            "",
+            tint = Color.White
+        )
 //        ExpandedMenu(arrayOf(), {})
     }
 }

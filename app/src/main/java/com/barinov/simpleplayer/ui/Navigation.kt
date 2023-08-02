@@ -1,6 +1,5 @@
 package com.barinov.simpleplayer.ui
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.unit.Dp
@@ -9,9 +8,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.barinov.simpleplayer.ui.screens.FileBrowser
 import com.barinov.simpleplayer.ui.screens.HomeScreen
-import com.barinov.simpleplayer.ui.viewModel.HostViewModel
-import com.barinov.simpleplayer.ui.viewModel.ScanViewModel
+import com.barinov.simpleplayer.ui.screens.ScanScreen
+import com.barinov.simpleplayer.ui.screens.TracksScreen
+import com.barinov.simpleplayer.ui.viewModels.ScanViewModel
 import org.koin.androidx.compose.getViewModel
+
+
+const val playListSelectedKey = "play_list_click"
 
 @Composable
 fun NavigationHost(
@@ -38,8 +41,16 @@ fun NavigationHost(
             )
         }
 
+        composable(Screen.ScreenRegister.SCAN.name){
+            ScanScreen(navController = navController)
+        }
+
         composable(Screen.ScreenRegister.HOME.name){
             HomeScreen(menuProvider, navController)
+        }
+
+        composable(Screen.ScreenRegister.PLAYLISTS.name){
+            TracksScreen(it.arguments?.getString(playListSelectedKey))
         }
 
 

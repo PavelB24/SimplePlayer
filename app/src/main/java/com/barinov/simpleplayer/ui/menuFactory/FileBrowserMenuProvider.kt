@@ -6,35 +6,32 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import com.barinov.simpleplayer.R
 import com.barinov.simpleplayer.domain.MassStorageProvider
-import com.barinov.simpleplayer.domain.RootType
-import com.barinov.simpleplayer.ui.AddFromCurrentDirImageButton
-import com.barinov.simpleplayer.ui.ArgsContainer
-import com.barinov.simpleplayer.ui.RotatingRootButton
-import com.barinov.simpleplayer.ui.ExpandedMenu
-import com.barinov.simpleplayer.ui.MenuFactoryI
+import com.barinov.simpleplayer.ui.components.AddFromCurrentDirImageButton
+import com.barinov.simpleplayer.ui.MenuType
+import com.barinov.simpleplayer.ui.components.RotatingRootButton
+import com.barinov.simpleplayer.ui.components.ExpandedMenu
+import com.barinov.simpleplayer.ui.MenuProvider
 import com.barinov.simpleplayer.ui.TopBarConnector
 
 @Immutable
-class MenuFactory(private val args: ArgsContainer.FileBrowserArgs) : MenuFactoryI {
+class FileBrowserMenuProvider(
+    private val args: MenuType.FileBrowserType
+): MenuProvider {
 
 
-    override fun getMenuInstance(
-        connector: TopBarConnector,
+    override fun getInstance(
+        connector: TopBarConnector?
     ): @Composable () -> Unit {
-        return when (connector) {
+         when (connector) {
             is TopBarConnector.FileBrowserTopBarConnector -> {
-                {
+               return {
                     FileBrowserMenu(
                         connector,
                         args
                     )
                 }
-            }
-
-            is TopBarConnector.PlaylistsTopBarConnector -> {
-                {
-                    CurrentPlayListMenu(connector)
-                }
+            } else -> {
+                throw IllegalArgumentException("${this::class.java.name} incomparable with this TopBarConnector")
             }
         }
     }
@@ -60,11 +57,11 @@ class MenuFactory(private val args: ArgsContainer.FileBrowserArgs) : MenuFactory
     @Composable
     private fun FileBrowserMenu(
         connector: TopBarConnector.FileBrowserTopBarConnector,
-        args: ArgsContainer.FileBrowserArgs
+        args: MenuType.FileBrowserType
     ) {
         val isUsbReady = args.usbAccessFlow.collectAsState()
         AnimatedVisibility(visible = isUsbReady.value is MassStorageProvider.MassStorageState.Ready) {
-            RotatingRootButton(args.startRt, args.typeFlow){
+            RotatingRootButton(args.startRt, args.typeFlow) {
                 connector.changeRootType()
             }
         }

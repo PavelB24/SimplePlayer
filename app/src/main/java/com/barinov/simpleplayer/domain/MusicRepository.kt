@@ -12,6 +12,12 @@ class MusicRepository(
         dao.insertTrackData(track)
     }
 
+    fun getAllTracks() = dao.allTracks()
+
+    fun getTracksByPlayListId(id: String)= dao.getTracksByPlayListId(id)
+
+    fun allPlayLists() = dao.allPlayLists()
+
     suspend fun getTracksCount() = dao.getTracksCount()
 
     suspend fun deleteMusicFileIndexById(id: String) = dao.deleteTrackDataById(id)

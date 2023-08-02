@@ -1,6 +1,5 @@
-package com.barinov.simpleplayer.ui.viewModel
+package com.barinov.simpleplayer.ui.viewModels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barinov.simpleplayer.domain.FileWorker
@@ -12,7 +11,6 @@ import com.barinov.simpleplayer.ui.Screen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class ScanViewModel(

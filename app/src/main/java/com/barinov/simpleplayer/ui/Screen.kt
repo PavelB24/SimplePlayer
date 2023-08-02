@@ -48,6 +48,6 @@ sealed class Screen(
 
     @Immutable
     enum class ScreenRegister {
-        HOME, IMPORT, PLAYLISTS, TRACK_DETAILS, SELECTED_PLAY_LIST
+        HOME, IMPORT, PLAYLISTS, TRACK_DETAILS, SELECTED_PLAY_LIST, SCAN
     }
 }

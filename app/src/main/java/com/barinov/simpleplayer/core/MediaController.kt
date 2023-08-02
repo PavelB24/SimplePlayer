@@ -5,7 +5,6 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaMetadata
-import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -74,7 +73,7 @@ class MediaController(
                         it.setMetadata(metaData)
                         setPlay()
                     }
-                    mediaEngine.start()
+                    mediaEngine.resume()
                     _mediaSessionEventFlow.emit(MediaSessionEvents.Playing(mediaEngine.getCurrentTrackId()))
                     onStatusChanged?.invoke(PlaybackState.STATE_PLAYING)
                 }

@@ -11,8 +11,6 @@ import com.barinov.simpleplayer.musicFileIterator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -53,10 +51,11 @@ class MediaEngine(
 
     override fun getCurrentPosition() = musicFileIterator.getCurrentPosition()
 
-    fun startMusic(
-        musicFile: MusicFile
+    override fun startMusic(
+        musicFile: MusicFile,
+        notBindToPlaylist: Boolean
     ) {
-        startMusic(listOf(musicFile), musicFile.id)
+        startMusic(listOf(musicFile), musicFile.id, notBindToPlaylist)
     }
 
     override fun getCurrentTrackId(): String? = musicFileIterator.currentTrackId
@@ -66,12 +65,13 @@ class MediaEngine(
 
     fun startMusic(
         musicFiles: List<MusicFile>,
-        startId: String
+        startId: String,
+        notBindToPlaylist: Boolean
     ) {
         mediaPlayer.reset()
         if (checkPlaylists(musicFiles.firstOrNull()?.playlistId)) {
             if (musicFileIterator.currentTrackId == startId) {
-                start()
+                resume()
             } else {
                 val startFrom = musicToPlay.indexOrNull {
                     it.id == startId
@@ -188,7 +188,7 @@ class MediaEngine(
     }
 
 
-    override fun start() {
+    override fun resume() {
         if (!mediaPlayer.isPlaying) mediaPlayer.start()
     }
 

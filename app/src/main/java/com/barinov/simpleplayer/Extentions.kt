@@ -60,7 +60,7 @@ fun CommonFileItem.extractPath(): String {
 
 fun UsbFile.toCommonFileItem(fs: FileSystem): CommonFileItem {
     val signature = this.absolutePath + File.separator + name
-    return CommonFileItem(signature, length, RootType.USB, null, CommonFileItem.UsbData(this, fs))
+    return CommonFileItem(signature, if(!isDirectory) length else 0L, RootType.USB, null, CommonFileItem.UsbData(this, fs))
 }
 
 fun ColorsContainer.toSystemColorsContainer(): SystemColorsContainer {
@@ -156,15 +156,22 @@ fun CommonFileItem.isFile(): Boolean {
     return if (rootType == RootType.INTERNAL) {
         iFile!!.isFile
     } else {
-        uEntity!!.uFile.isDirectory
+        !uEntity!!.uFile.isDirectory
     }
 }
 
 fun CommonFileItem.getSize(): Long {
     return if (rootType == RootType.INTERNAL) {
-        iFile!!.length()
+        iFile?.length() ?: 0L
     } else {
-        uEntity!!.uFile.length
+        uEntity?.uFile?.run {
+            if(isDirectory){
+                0L
+            } else {
+                length
+            }
+        } ?: 0L
+
     }
 }
 

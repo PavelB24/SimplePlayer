@@ -4,10 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -15,7 +15,7 @@ import com.barinov.simpleplayer.toSystemColorsContainer
 import com.barinov.simpleplayer.ui.ColorsProvider
 import com.barinov.simpleplayer.ui.Screen
 import com.barinov.simpleplayer.ui.ScreenProvider
-import com.barinov.simpleplayer.ui.WavesAnimatedHome
+import com.barinov.simpleplayer.ui.components.WavesAnimatedHome
 
 @Composable
 fun HomeScreen(
@@ -23,9 +23,6 @@ fun HomeScreen(
     navController: NavHostController,
 ) {
     val isDark = isSystemInDarkTheme()
-    val dialogExtended = rememberSaveable {
-        mutableStateOf(false)
-    }
     val colors = ColorsProvider.obtainOnHomeScreen()
     LaunchedEffect(key1 = Unit) {
         if (menuProvider.currentScreen.value !is Screen.Home) {
@@ -35,16 +32,13 @@ fun HomeScreen(
             )
         }
     }
-    if(dialogExtended.value){
-        ScanDialog(navController = navController, dialogExtended)
-    }
     Box(
         modifier = Modifier
             .background(colors.uiGradient!!)
             .fillMaxSize()
     ) {
         WavesAnimatedHome {
-            dialogExtended.value = true
+            navController.navigate(Screen.ScreenRegister.SCAN.name)
         }
     }
 //    Column(

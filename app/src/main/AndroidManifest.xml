@@ -29,9 +29,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name=".service.UsbConnectionService"/>
         <service
             android:name=".service.PlayerMediaService"
-            android:exported="true"
+            android:exported="false"
             tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService"/>

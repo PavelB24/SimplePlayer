@@ -1,6 +1,7 @@
-package com.barinov.simpleplayer.ui.viewModel
+package com.barinov.simpleplayer.ui.viewModels
 
 import android.os.Environment
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.barinov.simpleplayer.domain.RootType
@@ -99,10 +100,14 @@ class FileBrowserViewModel(
 
     fun changeRootType() {
         rootTypeFlow.value =
-            if(rootTypeFlow.value == RootType.INTERNAL)
+            if (rootTypeFlow.value == RootType.INTERNAL) {
+                val massStorageRoot = massStorageProvider.getRoot()
+                currentFolder = massStorageRoot?.second?.toCommonFileItem(massStorageRoot.first)
                 RootType.USB
-            else
+            } else {
+                Environment.getExternalStorageDirectory().toCommonFileItem()
                 RootType.INTERNAL
+            }
     }
 
     fun getRootType() = rootTypeFlow.value
@@ -115,7 +120,8 @@ class FileBrowserViewModel(
 
     fun peekFolder(folder: CommonFileItem? = null): Array<CommonFileItem> {
         val entry = folder ?: currentFolder
-        return if(entry == null){
+        Log.d("@@@", "$entry")
+        return if (entry == null) {
             emptyArray()
         } else {
             arrayOf(entry)

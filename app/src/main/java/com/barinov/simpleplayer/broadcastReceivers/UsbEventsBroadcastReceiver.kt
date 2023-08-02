@@ -7,6 +7,7 @@ import android.content.Intent
 import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.os.Build
+import android.util.Log
 import com.barinov.simpleplayer.BuildConfig
 import com.barinov.simpleplayer.domain.MassStorageProvider
 import kotlinx.coroutines.CoroutineScope
@@ -163,8 +164,7 @@ class UsbEventsBroadcastReceiver(
 
     private suspend fun initDevice(device: UsbMassStorageDevice){
         device.init()
-        val currentFs: FileSystem? = device.partitions.firstOrNull()?.fileSystem
-        currentFs?.let { fs ->
+        device.partitions.firstOrNull()?.fileSystem?.let { fs ->
             currentConnection = fs to device
             _massStorageDataFlow.emit(
                 MassStorageProvider.MassStorageState.Ready(
