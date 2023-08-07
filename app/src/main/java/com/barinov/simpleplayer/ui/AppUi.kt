@@ -58,7 +58,7 @@ fun Host(provider: ProvidableCompositionLocal<ScreenProvider>) {
         modifier = Modifier.fillMaxSize(),
         topBar = {
             AnimatedVisibility(
-                visible = provider.current.currentScreen.value is Screen.Import,
+                visible = checkTopBarVisibility(provider.current.currentScreen.value),
                 enter = expandVertically(),
                 exit = shrinkVertically()
             ) {
@@ -100,4 +100,8 @@ fun Host(provider: ProvidableCompositionLocal<ScreenProvider>) {
 
         }
     )
+}
+
+private fun checkTopBarVisibility(value: Screen): Boolean {
+    return value is Screen.Import || value is Screen.Scan
 }

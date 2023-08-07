@@ -89,7 +89,7 @@ fun FileBrowser(
         ) {
             items(
                 items = files,
-                key = { it.signatureString },
+                key = { it.hashCode() },
                 itemContent = {
                     FileItem(item = it, interactor = interactor)
                 }

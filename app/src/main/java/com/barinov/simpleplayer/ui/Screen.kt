@@ -12,38 +12,38 @@ sealed class Screen(
     @Immutable
     data class Home(
         override val Toolbar: @Composable () -> Unit = {},
-        override val screenName: ScreenRegister = ScreenRegister.HOME,
         override val backgroundContainer: SystemColorsContainer
-    ) : Screen(Toolbar,  screenName, backgroundContainer)
+    ) : Screen(Toolbar, ScreenRegister.HOME, backgroundContainer)
 
     @Immutable
     data class Import(
         override val Toolbar: @Composable () -> Unit,
-        override val screenName: ScreenRegister = ScreenRegister.IMPORT,
         override val backgroundContainer: SystemColorsContainer
-    ) : Screen(Toolbar, screenName, backgroundContainer)
+    ) : Screen(Toolbar, ScreenRegister.IMPORT, backgroundContainer)
 
     @Immutable
     data class Playlists(
         override val Toolbar: @Composable () -> Unit,
-        override val screenName: ScreenRegister = ScreenRegister.PLAYLISTS,
         override val backgroundContainer: SystemColorsContainer
-    ) : Screen(Toolbar, screenName, backgroundContainer)
+    ) : Screen(Toolbar, ScreenRegister.PLAYLISTS, backgroundContainer)
 
     @Immutable
     data class SelectedPlayList(
         override val Toolbar: @Composable () -> Unit,
-        override val screenName: ScreenRegister = ScreenRegister.PLAYLISTS,
         override val backgroundContainer: SystemColorsContainer
-    ) :  Screen(Toolbar, screenName, backgroundContainer)
+    ) : Screen(Toolbar, ScreenRegister.PLAYLISTS, backgroundContainer)
+
+    @Immutable
+    data class Scan(
+        override val Toolbar: @Composable () -> Unit,
+        override val backgroundContainer: SystemColorsContainer
+    ) : Screen(Toolbar, ScreenRegister.IMPORT, backgroundContainer)
 
     @Immutable
     data class TrackDetails(
         override val Toolbar: @Composable () -> Unit,
-        override val screenName: ScreenRegister = ScreenRegister.TRACK_DETAILS,
         override val backgroundContainer: SystemColorsContainer
-    ) : Screen(Toolbar, screenName, backgroundContainer)
-
+    ) : Screen(Toolbar, ScreenRegister.TRACK_DETAILS, backgroundContainer)
 
 
     @Immutable

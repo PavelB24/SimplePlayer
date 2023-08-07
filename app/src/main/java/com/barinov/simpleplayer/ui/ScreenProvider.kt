@@ -13,17 +13,17 @@ import androidx.compose.ui.unit.dp
 import com.barinov.simpleplayer.toSystemColorsContainer
 import com.barinov.simpleplayer.ui.components.TopBarBackButton
 import com.barinov.simpleplayer.ui.theme.primary_color
+import com.barinov.simpleplayer.ui.theme.top_bar_color
 
 @Stable
 class ScreenProvider {
 
-    private val _currentScreen = mutableStateOf<Screen>(Screen.Home(
-        backgroundContainer = ColorsProvider.obtainOnHomeScreen().toSystemColorsContainer()
-    ))
+    private val _currentScreen = mutableStateOf<Screen>(
+        Screen.Home(
+            backgroundContainer = ColorsProvider.obtainOnHomeScreen().toSystemColorsContainer()
+        )
+    )
     val currentScreen: State<Screen> = _currentScreen
-
-
-
 
 
     fun onScreenEnter(
@@ -37,17 +37,19 @@ class ScreenProvider {
             Screen.ScreenRegister.HOME -> Screen.Home(
                 backgroundContainer = colors
             )
+
             Screen.ScreenRegister.IMPORT -> Screen.Import(
                 AppBarComponentFactory.obtainAppBarComponent(
-                    NavIcon = {NavIcon()},
-                    TopBarExtras = TopBarExtras
+                    NavIcon = { NavIcon() },
+                    TopBarExtras = TopBarExtras,
+                    topBarColor = colors.systemTopUiColor
                 ),
                 backgroundContainer = colors
             )
 
             Screen.ScreenRegister.PLAYLISTS -> Screen.Playlists(
                 AppBarComponentFactory.obtainAppBarComponent(
-                    NavIcon = {NavIcon()},
+                    NavIcon = { NavIcon() },
                     TopBarExtras = TopBarExtras
                 ),
                 backgroundContainer = colors
@@ -55,14 +57,23 @@ class ScreenProvider {
 
             Screen.ScreenRegister.SELECTED_PLAY_LIST -> Screen.TrackDetails(
                 AppBarComponentFactory.obtainAppBarComponent(
-                    NavIcon = {NavIcon()},
+                    NavIcon = { NavIcon() },
                     TopBarExtras = TopBarExtras
                 ),
                 backgroundContainer = colors
             )
 
             Screen.ScreenRegister.TRACK_DETAILS -> TODO()
-            Screen.ScreenRegister.SCAN -> TODO()
+            Screen.ScreenRegister.SCAN -> {
+                Screen.Scan(
+                    AppBarComponentFactory.obtainAppBarComponent(
+                        NavIcon = { NavIcon() },
+                        TopBarExtras = TopBarExtras,
+                        topBarColor = colors.systemTopUiColor
+                    ),
+                    backgroundContainer = colors
+                )
+            }
         }
     }
 

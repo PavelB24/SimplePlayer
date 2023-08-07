@@ -8,6 +8,7 @@ import com.barinov.simpleplayer.domain.MusicRepository
 import com.barinov.simpleplayer.domain.MusicStorageType
 import com.barinov.simpleplayer.domain.StorageDataCreator
 import com.barinov.simpleplayer.domain.model.CommonFileItem
+import com.barinov.simpleplayer.getName
 import com.barinov.simpleplayer.toCommonFileItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -151,7 +152,7 @@ class SearchUtil(
                 }
                 _filesEventFlow.emit(
                     FileWorker.FileWorkEvents.OnSearchCompleted(
-                        buffer.size
+                        buffer.map { it.getName() }
                     )
                 )
             }
@@ -182,10 +183,10 @@ class SearchUtil(
                     _filesEventFlow.emit(FileWorker.FileWorkEvents.NoMusicFound)
                 } else {
                     val  filteredBuffer = buffer.distinctBy { it.signatureString }
-                    this@SearchUtil.buffer = Pair(filteredBuffer, playListName ?: DEFAULT_PLAYLIST_NAME)
+                    this@SearchUtil.buffer = filteredBuffer to (playListName ?: DEFAULT_PLAYLIST_NAME)
                     _filesEventFlow.emit(
                         FileWorker.FileWorkEvents.OnSearchCompleted(
-                            filteredBuffer.size
+                            filteredBuffer.map { it.getName() }
                         )
                     )
                 }
@@ -237,7 +238,7 @@ class SearchUtil(
                 }
                 _filesEventFlow.emit(
                     FileWorker.FileWorkEvents.OnSearchCompleted(
-                        0
+                        emptyList()
                     )
                 )
             }

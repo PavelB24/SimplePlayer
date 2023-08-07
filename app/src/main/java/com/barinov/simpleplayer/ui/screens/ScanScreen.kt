@@ -3,16 +3,23 @@ package com.barinov.simpleplayer.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.Checkbox
@@ -21,10 +28,13 @@ import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,9 +51,20 @@ import com.barinov.simpleplayer.domain.FileWorker
 import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.ellipsizePath
 import com.barinov.simpleplayer.extractPath
+import com.barinov.simpleplayer.toSystemColorsContainer
+import com.barinov.simpleplayer.ui.ColorsContainer
+import com.barinov.simpleplayer.ui.ColorsProvider
+import com.barinov.simpleplayer.ui.MenuType
 import com.barinov.simpleplayer.ui.Screen
+import com.barinov.simpleplayer.ui.ScreenProvider
+import com.barinov.simpleplayer.ui.TopBarConnector
+import com.barinov.simpleplayer.ui.components.TopBarBackButton
+import com.barinov.simpleplayer.ui.components.items.FileItem
+import com.barinov.simpleplayer.ui.components.items.SimpleScannedItem
+import com.barinov.simpleplayer.ui.menuFactory.ScreenMenuProvider
 import com.barinov.simpleplayer.ui.theme.path_card_color
 import com.barinov.simpleplayer.ui.theme.pb_color
+import com.barinov.simpleplayer.ui.uiModels.SelectableSearchedItem
 import com.barinov.simpleplayer.ui.viewModels.ScanViewModel
 import org.koin.androidx.compose.getViewModel
 
@@ -52,10 +73,21 @@ const val PATH_KEY = "path"
 
 @Composable
 fun ScanScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    menuProvider: ScreenProvider,
 ) {
 
     val viewModel: ScanViewModel = getViewModel()
+    val isSystemInDarkTheme = isSystemInDarkTheme()
+
+    val colors =
+        if (!isSystemInDarkTheme) ColorsProvider.obtainOnScanScreen() else ColorsProvider.obtainDefaultLight()
+
+    LaunchedEffect(key1 = Unit) {
+        onScreenEnter(navController, menuProvider, colors)
+    }
+
+
 
     val events = viewModel.events.collectAsState(initial = FileWorker.FileWorkEvents.Idle)
 
@@ -97,9 +129,11 @@ fun ScanScreen(
 
     Box(
         modifier = Modifier
+            .background(colors.uiGradient!!)
 //                .background(Color.White)
 //            .widthPaddingByDisplayMetrics(LocalContext.current, 15)
-            .animateContentSize(),
+            .animateContentSize()
+            .fillMaxSize()
 //            elevation = 8.dp
 //            contentAlignment = Alignment.Center
     ) {
@@ -205,6 +239,32 @@ fun ScanScreen(
                 }
             }
 
+            AnimatedVisibility(visible = events.value is FileWorker.FileWorkEvents.OnSearchCompleted) {
+                if(events.value is FileWorker.FileWorkEvents.OnSearchCompleted){
+                    val lazyListState: LazyListState = rememberLazyListState()
+                    val searched = remember{
+                        mutableStateOf((events.value as? FileWorker.FileWorkEvents.OnSearchCompleted)?.names?.map { SelectableSearchedItem(it, false) } )
+                    }
+                    searched.value?.let { searchedList ->
+                        LazyColumn(
+                            state = lazyListState,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(
+                                items = searchedList,
+                                key = { it.hashCode() },
+                                itemContent = {
+                                    SimpleScannedItem(item = it, onClicked = { item, checked ->
+                                        val index = searchedList.indexOf(item)
+                                        searched.value = searchedList.toMutableStateList().also { it[index] = it[index].copy(checked = checked) }
+                                    })
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(26.dp))
 
             AnimatedVisibility(visible = events.value is FileWorker.FileWorkEvents.OnBlockCopied || events.value is FileWorker.FileWorkEvents.OnCopyStarted) {
@@ -259,7 +319,7 @@ fun ScanScreen(
                     is FileWorker.FileWorkEvents.OnSearchCompleted -> {
                         stringResource(
                             id = R.string.on_tracks_found,
-                            (events.value as FileWorker.FileWorkEvents.OnSearchCompleted).count
+                            (events.value as FileWorker.FileWorkEvents.OnSearchCompleted).names.size
                         )
                     }
 
@@ -323,6 +383,22 @@ fun ScanScreen(
 
         }
     }
+}
+
+private fun onScreenEnter(
+    navController: NavHostController,
+    menuProvider: ScreenProvider,
+    colors: ColorsContainer
+){
+    menuProvider.onScreenEnter(
+        NavIcon = {
+            TopBarBackButton {
+                navController.navigateUp()
+            }
+        },
+        screen = Screen.ScreenRegister.SCAN,
+        colors = colors.toSystemColorsContainer()
+    )
 }
 
 private fun getButtonAccessByState(state: FileWorker.FileWorkEvents): Boolean =

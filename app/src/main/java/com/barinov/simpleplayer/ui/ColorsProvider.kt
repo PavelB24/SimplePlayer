@@ -22,6 +22,27 @@ object ColorsProvider {
         )
     }
 
+    fun obtainOnScanScreen(): ColorsContainer{
+        val end = Offset(0f, Float.POSITIVE_INFINITY)
+        val colors: List<Color> = listOf(
+            Color(0xDDDADFD8),
+            Color(0xDDBEC9B9),
+            Color(0xDDBEE2B4),
+            Color(0xDDB1DFA4),
+            Color(0xDDA9E498),
+        )
+        return ColorsContainer(
+            ColorsContainer.Type.GRADIENT,
+            systemTopUiColor = Color(0xDDDADFD8),
+            navBarColor = Color(0xDDA9E498),
+            uiGradient = Brush.linearGradient(
+                colors = colors,
+                start = Offset.Zero,
+                end = end
+            )
+        )
+
+    }
     fun obtainOnHomeScreen(): ColorsContainer {
         val end = Offset(0f, Float.POSITIVE_INFINITY)
         val colors: List<Color> = listOf(
@@ -46,7 +67,9 @@ object ColorsProvider {
     fun obtainOnFileBrowserLight(): ColorsContainer {
         return ColorsContainer(
             ColorsContainer.Type.COLOR,
-            systemTopUiColor = primary_color,
+//            systemTopUiColor = primary_color,
+            systemTopUiColor = Color(0xDD98C288),
+            navBarColor = Color(0xDD98C288),
         )
     }
 }

@@ -265,7 +265,7 @@ class FileWorker(
 
         data class OnBlockCopied(val megaBytes: Int) : FileWorkEvents
 
-        data class OnSearchCompleted(val count: Int) : FileWorkEvents
+        data class OnSearchCompleted(val names: List<String>) : FileWorkEvents
     }
 
     override fun getInternalStorageRootPath(): String {

@@ -42,7 +42,10 @@ fun NavigationHost(
         }
 
         composable(Screen.ScreenRegister.SCAN.name){
-            ScanScreen(navController = navController)
+            ScanScreen(
+                navController = navController,
+                menuProvider = menuProvider
+            ,)
         }
 
         composable(Screen.ScreenRegister.HOME.name){
