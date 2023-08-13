@@ -14,11 +14,15 @@ class MusicRepository(
 
     fun getAllTracks() = dao.allTracks()
 
+    suspend fun getAllExternalTracksInfo() = dao.getAllExternalTracksInfo()
+
     fun getTracksByPlayListId(id: String)= dao.getTracksByPlayListId(id)
 
     fun allPlayLists() = dao.allPlayLists()
 
     suspend fun getTracksCount() = dao.getTracksCount()
+
+    suspend fun getTracksCountInPlayList(playListId: String) = dao.getTracksCountInPlayList(playListId)
 
     suspend fun deleteMusicFileIndexById(id: String) = dao.deleteTrackDataById(id)
 
@@ -42,4 +46,6 @@ class MusicRepository(
             pl.id
         }
     }
+
+    suspend fun deletePlayList(playListId: String) = dao.deletePlayListById(playListId)
 }

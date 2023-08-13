@@ -7,6 +7,7 @@ import androidx.room.Query
 import com.barinov.simpleplayer.domain.model.CheckableTrackInfo
 import com.barinov.simpleplayer.domain.model.PlaylistEntity
 import com.barinov.simpleplayer.domain.model.TrackEntity
+import com.barinov.simpleplayer.domain.model.ValidationTrackInfo
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -42,7 +43,16 @@ interface MusicTracksDao {
     @Query("SELECT * FROM tracks WHERE play_list_id =:id")
     fun getTracksByPlayListId(id: String): Flow<TrackEntity>
 
+    @Query("SELECT path, id, play_list_id FROM tracks WHERE type == 1")
+    suspend fun getAllExternalTracksInfo(): List<ValidationTrackInfo>
+
     @Query("SELECT * FROM playlists")
     fun allPlayLists(): Flow<PlaylistEntity>
+    @Query("SELECT COUNT(*) FROM tracks WHERE play_list_id=:playListId")
+    suspend fun getTracksCountInPlayList(playListId: String): Int
+
+    @Query("DELETE FROM playlists WHERE id=:playListId")
+    suspend fun deletePlayListById(playListId: String)
+
 
 }

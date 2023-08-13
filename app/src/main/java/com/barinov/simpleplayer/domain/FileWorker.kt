@@ -8,12 +8,15 @@ import com.barinov.simpleplayer.copyWithCallBack
 import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.domain.model.MusicFile
 import com.barinov.simpleplayer.domain.model.MusicFileMetaData
+import com.barinov.simpleplayer.domain.model.VerifiedTrackItem
 import com.barinov.simpleplayer.toCommonFileItem
+import com.barinov.simpleplayer.toVerifiedTrackItem
 import kotlinx.coroutines.flow.MutableSharedFlow
 import me.jahnen.libaums.core.fs.FileSystem
 import me.jahnen.libaums.core.fs.UsbFile
 import me.jahnen.libaums.core.fs.UsbFileStreamFactory
 import java.io.File
+import java.util.UUID
 
 class FileWorker(
     context: Context,
@@ -40,7 +43,7 @@ class FileWorker(
 
     suspend fun scanWithSubFolders(
         file: CommonFileItem,
-        buffer: MutableList<CommonFileItem>,
+        buffer: MutableList<VerifiedTrackItem>,
         checkOnLoaded: suspend (Signature) -> Boolean,
     ) {
 //        if (!file.isDirectory) throw IllegalArgumentException()
@@ -52,7 +55,7 @@ class FileWorker(
                     if (name.endsWith(".mp3") &&
                         !checkOnLoaded(signature)
                     ) {
-                        buffer.add(toCommonFileItem())
+                        buffer.add(toVerifiedTrackItem())
                     }
                 } else {
                     listFiles()?.forEach {
@@ -68,7 +71,7 @@ class FileWorker(
             file.uEntity?.apply {
                 if (!uFile.isDirectory) {
                     if (uFile.name.endsWith(".mp3")) {
-                        buffer.add(this.uFile.toCommonFileItem(fs))
+                        buffer.add(this.uFile.toVerifiedTrackItem(fs))
                     }
                 } else {
                     uFile.listFiles().forEach {
@@ -110,7 +113,7 @@ class FileWorker(
     }
 
     suspend fun addValidMusicFile(
-        musicFile: CommonFileItem,
+        musicFile: VerifiedTrackItem,
         copyOnInternalStorage: Boolean,
         alreadyCopied: Long,
         onHandled: suspend (MusicFileMetaData, String) -> Unit
@@ -191,7 +194,7 @@ class FileWorker(
 
     fun scanSelectedFolder(
         musicFile: CommonFileItem,
-        buffer: MutableList<CommonFileItem>
+        buffer: MutableList<VerifiedTrackItem>
     ) {
         if (musicFile.rootType == RootType.INTERNAL) {
             musicFile.iFile?.apply {
@@ -199,7 +202,7 @@ class FileWorker(
                 listFiles()?.forEach {
                     if (it.isFile) {
                         if (it.name.endsWith(".mp3")) {
-                            buffer.add(toCommonFileItem())
+                            buffer.add(toVerifiedTrackItem())
                         }
                     }
                 }
@@ -209,7 +212,7 @@ class FileWorker(
                 if (!uFile.isDirectory) throw IllegalArgumentException()
                 uFile.listFiles().forEach {
                     if (!it.isDirectory && it.name.endsWith(".mp3")) {
-                        buffer.add(it.toCommonFileItem(fs))
+                        buffer.add(it.toVerifiedTrackItem(fs))
                     }
                 }
 
@@ -265,7 +268,7 @@ class FileWorker(
 
         data class OnBlockCopied(val megaBytes: Int) : FileWorkEvents
 
-        data class OnSearchCompleted(val names: List<String>) : FileWorkEvents
+        data class OnSearchCompleted(val names: List<androidx.core.util.Pair<UUID, String>>) : FileWorkEvents
     }
 
     override fun getInternalStorageRootPath(): String {

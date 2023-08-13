@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.util.toAndroidXPair
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.barinov.simpleplayer.R
@@ -49,6 +50,7 @@ import com.barinov.simpleplayer.ui.theme.pb_color
 import com.barinov.simpleplayer.ui.uiModels.SelectableSearchedItem
 import com.barinov.simpleplayer.ui.viewModels.ScanViewModel
 import org.koin.androidx.compose.getViewModel
+import java.util.UUID
 import kotlin.contracts.contract
 
 
@@ -146,7 +148,9 @@ fun ScanScreen(
 
             TracksTitle(events)
 
-            SearchedTracksList(events)
+            SearchedTracksList(events){ path, check->
+                viewModel.directPutSearchResults(path, check)
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -283,7 +287,10 @@ private fun CopyToInternalCheckBox(
 }
 
 @Composable
-private fun SearchedTracksList(events: State<FileWorker.FileWorkEvents>) {
+private inline fun SearchedTracksList(
+    events: State<FileWorker.FileWorkEvents>,
+    crossinline onCheckedChanged: (UUID, Boolean) -> Unit
+) {
     AnimatedVisibility(visible = events.value is FileWorker.FileWorkEvents.OnSearchCompleted) {
         Spacer(modifier = Modifier.height(16.dp))
         if (events.value is FileWorker.FileWorkEvents.OnSearchCompleted) {
@@ -291,7 +298,8 @@ private fun SearchedTracksList(events: State<FileWorker.FileWorkEvents>) {
             val searched = remember {
                 mutableStateOf((events.value as? FileWorker.FileWorkEvents.OnSearchCompleted)?.names?.map {
                     SelectableSearchedItem(
-                        it,
+                        it.first,
+                        it.second,
                         true
                     )
                 })
@@ -305,14 +313,17 @@ private fun SearchedTracksList(events: State<FileWorker.FileWorkEvents>) {
                 ) {
                     items(
                         items = searchedList,
-                        key = { it.hashCode() },
+                        key = { it.uuid },
                         itemContent = {
                             SimpleScannedItem(item = it, onClicked = { item, checked ->
                                 val index = searchedList.indexOf(item)
                                 searched.value =
                                     searchedList.toMutableStateList().also { list ->
                                         list[index] = list[index].copy(checked = checked)
+                                        val changedItem = list[index]
+                                        onCheckedChanged(changedItem.uuid, changedItem.checked)
                                     }
+
                             })
                         }
                     )

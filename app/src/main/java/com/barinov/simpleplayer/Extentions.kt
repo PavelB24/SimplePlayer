@@ -18,6 +18,7 @@ import com.barinov.simpleplayer.domain.MusicFileIteratorImpl
 import com.barinov.simpleplayer.domain.RootType
 import com.barinov.simpleplayer.domain.model.CommonFileItem
 import com.barinov.simpleplayer.domain.model.MusicFile
+import com.barinov.simpleplayer.domain.model.VerifiedTrackItem
 import com.barinov.simpleplayer.service.PlayerMediaService
 import com.barinov.simpleplayer.ui.ColorsContainer
 import com.barinov.simpleplayer.ui.SystemColorsContainer
@@ -45,9 +46,14 @@ inline fun <T> List<T>.indexOrNull(predicate: (T) -> Boolean): Int? {
     return null
 }
 
+infix fun <A, B> A.to(that: B): androidx.core.util.Pair<A, B> = androidx.core.util.Pair(this, that)
+
 fun File.toCommonFileItem(): CommonFileItem {
+    return CommonFileItem( length(), RootType.INTERNAL, this, null)
+}
+fun File.toVerifiedTrackItem(): VerifiedTrackItem {
     val signature = name + length().toString()
-    return CommonFileItem(signature, length(), RootType.INTERNAL, this, null)
+    return VerifiedTrackItem(signature, length(), RootType.INTERNAL, this, null)
 }
 
 fun CommonFileItem.extractPath(): String {
@@ -59,8 +65,11 @@ fun CommonFileItem.extractPath(): String {
 }
 
 fun UsbFile.toCommonFileItem(fs: FileSystem): CommonFileItem {
+    return CommonFileItem(if(!isDirectory) length else 0L, RootType.USB, null, CommonFileItem.UsbData(this, fs))
+}
+fun UsbFile.toVerifiedTrackItem(fs: FileSystem): VerifiedTrackItem {
     val signature = this.absolutePath + File.separator + name
-    return CommonFileItem(signature, if(!isDirectory) length else 0L, RootType.USB, null, CommonFileItem.UsbData(this, fs))
+    return VerifiedTrackItem(signature, if(!isDirectory) length else 0L, RootType.USB, null, CommonFileItem.UsbData(this, fs))
 }
 
 fun ColorsContainer.toSystemColorsContainer(): SystemColorsContainer {
@@ -193,6 +202,11 @@ fun String.ellipsizePath(maxLen: Int): String {
 }
 
 fun CommonFileItem.getName(): String {
+    return if (rootType == RootType.INTERNAL) {
+        iFile!!.name
+    } else uEntity!!.uFile.name
+}
+fun VerifiedTrackItem.getName(): String {
     return if (rootType == RootType.INTERNAL) {
         iFile!!.name
     } else uEntity!!.uFile.name
