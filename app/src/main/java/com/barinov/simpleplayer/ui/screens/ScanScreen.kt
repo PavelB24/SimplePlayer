@@ -6,26 +6,46 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Checkbox
 import androidx.compose.material.CheckboxDefaults
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -44,12 +64,12 @@ import com.barinov.simpleplayer.ui.Screen
 import com.barinov.simpleplayer.ui.ScreenProvider
 import com.barinov.simpleplayer.ui.components.TopBarBackButton
 import com.barinov.simpleplayer.ui.components.items.SimpleScannedItem
+import com.barinov.simpleplayer.ui.theme.action_color
 import com.barinov.simpleplayer.ui.theme.path_card_color
 import com.barinov.simpleplayer.ui.theme.pb_color
 import com.barinov.simpleplayer.ui.uiModels.SelectableSearchedItem
 import com.barinov.simpleplayer.ui.viewModels.ScanViewModel
 import org.koin.androidx.compose.getViewModel
-import kotlin.contracts.contract
 
 
 const val PATH_KEY = "path"
@@ -83,30 +103,32 @@ fun ScanScreen(
         )
     }
 
-    val events = viewModel.events.collectAsState(initial = FileWorker.FileWorkEvents.Idle).also { state->
-        when (state.value) {
-            is FileWorker.FileWorkEvents.OnCopyStarted -> {
-                sizeToCopy.value =
-                    (state.value as FileWorker.FileWorkEvents.OnCopyStarted).megaBytesToCopy ?: 0
-            }
+    val events =
+        viewModel.events.collectAsState(initial = FileWorker.FileWorkEvents.Idle).also { state ->
+            when (state.value) {
+                is FileWorker.FileWorkEvents.OnCopyStarted -> {
+                    sizeToCopy.value =
+                        (state.value as FileWorker.FileWorkEvents.OnCopyStarted).megaBytesToCopy
+                            ?: 0
+                }
 
 //        is FileWorker.FileWorkEvents.OnBlockCopied -> {
 //            totalCopy.value += (events.value as FileWorker.FileWorkEvents.OnBlockCopied).megaBytes
 //        }
 
-            is FileWorker.FileWorkEvents.OnCompleted -> {
+                is FileWorker.FileWorkEvents.OnCompleted -> {
 
+                }
+
+                else -> {}
             }
-
-            else -> {}
         }
-    }
 
 
 
     Box(
         modifier = Modifier
-            .background(colors.uiGradient!!)
+            .background(Color.White) //NPE
             .animateContentSize()
             .fillMaxSize()
     ) {
@@ -176,15 +198,11 @@ private fun ScanScreenButtonsBlock(
             .padding(end = 16.dp),
         horizontalArrangement = Arrangement.End
     ) {
-//                Button(
-//                    onClick = { dialogExtender.value = false },
-//                    enabled = getButtonAccessByState(events.value)
-//                ) {
-//                    Text(text = stringResource(id = android.R.string.cancel))
-//                }
+
         Spacer(modifier = Modifier.width(26.dp))
 
         Button(
+            colors = ButtonDefaults.buttonColors(backgroundColor = action_color),
             onClick = {
                 when (events.value) {
                     is FileWorker.FileWorkEvents.Error -> {}
@@ -204,13 +222,18 @@ private fun ScanScreenButtonsBlock(
             },
             enabled = getButtonAccessByState(events.value)
         ) {
-            if (events.value is FileWorker.FileWorkEvents.Idle) {
-                Text(text = stringResource(id = R.string.start_scan))
-            } else {
-                Text(text = stringResource(id = android.R.string.ok))
-            }
+            Text(
+                modifier = Modifier.padding(5.dp),
+                color = Color.White,
+                style = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 20.sp
+                ),
+                text = if (events.value is FileWorker.FileWorkEvents.Idle)
+                    stringResource(id = R.string.start_scan) else
+                    stringResource(id = android.R.string.ok)
+            )
         }
-
     }
 
 }
@@ -324,7 +347,7 @@ private fun SearchedTracksList(events: State<FileWorker.FileWorkEvents>) {
 
 @Composable
 private fun TracksTitle(events: State<FileWorker.FileWorkEvents>) {
-    AnimatedVisibility(visible = events.value is FileWorker.FileWorkEvents.OnSearchCompleted || events.value is FileWorker.FileWorkEvents.NoMusicFound ) {
+    AnimatedVisibility(visible = events.value is FileWorker.FileWorkEvents.OnSearchCompleted || events.value is FileWorker.FileWorkEvents.NoMusicFound) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             modifier = Modifier

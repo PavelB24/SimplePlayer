@@ -16,10 +16,12 @@ import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.barinov.simpleplayer.ui.theme.primary_color
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
+@Preview()
 @Composable
 fun PlayerTheme() {
     val provider = staticCompositionLocalOf<ScreenProvider> { error("NotProvided") }
