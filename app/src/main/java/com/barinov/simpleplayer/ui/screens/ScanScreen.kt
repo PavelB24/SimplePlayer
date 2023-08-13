@@ -188,7 +188,7 @@ private fun ScanScreenButtonsBlock(
             onClick = {
                 when (events.value) {
                     is FileWorker.FileWorkEvents.Error -> {}
-                    FileWorker.FileWorkEvents.Idle -> {
+                    FileWorker.FileWorkEvents.Idle, is FileWorker.FileWorkEvents.NoMusicFound -> {
                         viewModel.startScan(
                             playlistName.value,
                             searchPath.value
@@ -199,12 +199,13 @@ private fun ScanScreenButtonsBlock(
                         viewModel.confirm(copyCb.value, playlistName.value)
                     }
 
+
                     else -> {}
                 }
             },
             enabled = getButtonAccessByState(events.value)
         ) {
-            if (events.value is FileWorker.FileWorkEvents.Idle) {
+            if (events.value is FileWorker.FileWorkEvents.Idle || events.value is FileWorker.FileWorkEvents.NoMusicFound) {
                 Text(text = stringResource(id = R.string.start_scan))
             } else {
                 Text(text = stringResource(id = android.R.string.ok))
@@ -420,7 +421,7 @@ private fun PlayListNameField(
         label = { Text(text = "PlaylistName") },
         singleLine = true,
         value = playlistName.value,
-        enabled = events.value is FileWorker.FileWorkEvents.Idle,
+        enabled = events.value is FileWorker.FileWorkEvents.Idle || events.value is FileWorker.FileWorkEvents.NoMusicFound,
         onValueChange = {
             playlistName.value = it
         })
