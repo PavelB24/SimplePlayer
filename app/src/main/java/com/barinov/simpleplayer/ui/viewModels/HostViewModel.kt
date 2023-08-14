@@ -1,17 +1,24 @@
 package com.barinov.simpleplayer.ui.viewModels
 
 import androidx.lifecycle.ViewModel
-import com.barinov.simpleplayer.domain.EventProvider
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 
 
-class HostViewModel(
+class HostViewModel() : ViewModel() {
 
-    private val eventsProvider: EventProvider
-) : ViewModel() {
-
-
+    private val _askPermissionFlow = MutableSharedFlow<Unit>()
+    val askPermissionFlow = _askPermissionFlow.asSharedFlow()
 
 
+    fun askPermission(){
+        viewModelScope.launch(Dispatchers.IO) {
+            _askPermissionFlow.emit(Unit)
+        }
+    }
 
 
 

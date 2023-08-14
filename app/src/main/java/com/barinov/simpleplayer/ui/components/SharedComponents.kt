@@ -57,8 +57,8 @@ fun TrackPlayInfo(){
 }
 
 @Composable
-fun WavesAnimatedHome(
-    onClick: () -> Unit = {}
+inline fun WavesAnimatedHome(
+   crossinline onClick: suspend () -> Unit = {}
 ) {
     
 
@@ -133,7 +133,7 @@ fun WavesAnimatedHome(
                                     500
                                 )
                             )
-                            onClick.invoke()
+                            onClick()
                         }
                     }
 

@@ -20,6 +20,7 @@ import com.barinov.simpleplayer.domain.TrackRemover
 import com.barinov.simpleplayer.domain.util.SearchUtil
 import com.barinov.simpleplayer.prefs.PreferencesManager
 import com.barinov.simpleplayer.ui.viewModels.FileBrowserViewModel
+import com.barinov.simpleplayer.ui.viewModels.HostViewModel
 import com.barinov.simpleplayer.ui.viewModels.ScanViewModel
 import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
@@ -84,6 +85,10 @@ val module = module {
 
     viewModel {
         FileBrowserViewModel(get<UsbEventsBroadcastReceiver>() as MassStorageProvider)
+    }
+
+    viewModel{
+        HostViewModel()
     }
 
     viewModel{

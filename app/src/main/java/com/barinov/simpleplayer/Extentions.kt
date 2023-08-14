@@ -6,6 +6,7 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -23,11 +24,17 @@ import com.barinov.simpleplayer.service.PlayerMediaService
 import com.barinov.simpleplayer.ui.ColorsContainer
 import com.barinov.simpleplayer.ui.SystemColorsContainer
 import com.barinov.simpleplayer.ui.theme.primary_color
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import me.jahnen.libaums.core.fs.FileSystem
 import me.jahnen.libaums.core.fs.UsbFile
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.round
 import kotlin.math.roundToInt
 
@@ -199,6 +206,18 @@ fun String.ellipsizePath(maxLen: Int): String {
         }
     }
     return takeLast(maxLen) + "..."
+}
+
+@Composable
+fun <T> Flow<T>.collectAsEffect(
+    context: CoroutineContext = EmptyCoroutineContext,
+    block: (T) -> Unit
+) {
+    LaunchedEffect(key1 = Unit) {
+        onEach{
+            block(it)
+        }.flowOn(context).launchIn(this)
+    }
 }
 
 fun CommonFileItem.getName(): String {
