@@ -9,7 +9,7 @@
     <string name="load_tracks_menu_item">Load tracks</string>
     <string name="about_menu_item">About</string>
     <string name="copy_on_scan_title">Сopy tracks in application storage</string>
-    <string name="start_scan">Start scan</string>
+    <string name="start_scan">start scan</string>
     <string name="on_no_tracks_found">No tracks were found</string>
     <string name="on_tracks_found">Found %d tracks</string>
 </resources>
