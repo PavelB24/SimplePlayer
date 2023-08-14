@@ -2,10 +2,15 @@ package com.barinov.simpleplayer.modul
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.barinov.simpleplayer.broadcastReceivers.UsbEventsBroadcastReceiver
 import com.barinov.simpleplayer.core.MediaController
 import com.barinov.simpleplayer.core.MediaEngine
 import com.barinov.simpleplayer.data.LocalDataBase
+import com.barinov.simpleplayer.data.TracksValidator
 import com.barinov.simpleplayer.domain.AudioDataHandler
 import com.barinov.simpleplayer.domain.FileWorker
 import com.barinov.simpleplayer.domain.MassStorageProvider
@@ -43,7 +48,14 @@ val module = module {
             androidApplication(),
             LocalDataBase::class.java,
             DATA_BASE_NAME
-        ).build()
+        ).addCallback(object: RoomDatabase.Callback(){
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                super.onOpen(db)
+                val validationWork = OneTimeWorkRequestBuilder<TracksValidator>().build()
+                WorkManager.getInstance(androidContext()).enqueue(validationWork)
+            }
+        })
+            .build()
     }
 
     single {

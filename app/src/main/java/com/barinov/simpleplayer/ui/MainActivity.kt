@@ -17,7 +17,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             PlayerTheme()
         }
-        startService(Intent(this, PlayerMediaService::class.java))
+//        startService(Intent(this, PlayerMediaService::class.java))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopService(Intent(this, UsbConnectionService::class.java))
     }
 
 }

@@ -35,7 +35,7 @@ class UsbConnectionService: Service() {
 
 
     override fun onDestroy() {
-        super.onDestroy()
         unregisterReceiver(usbReceiver)
+        super.onDestroy()
     }
 }

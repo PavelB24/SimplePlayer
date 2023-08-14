@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class ScanViewModel(
     private val searchUtil: SearchUtil,
@@ -29,6 +30,10 @@ class ScanViewModel(
                 } else  it.emit(Screen.ScreenRegister.HOME)
             }
         }
+
+    fun directPutSearchResults(musicItemUuid: UUID, isSelected: Boolean) =
+        searchUtil.directPutSearchResults(musicItemUuid, isSelected)
+
 
     fun confirm(
         copy: Boolean,
