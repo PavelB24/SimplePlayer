@@ -25,16 +25,15 @@ object ColorsProvider {
     fun obtainOnScanScreen(): ColorsContainer{
         val end = Offset(0f, Float.POSITIVE_INFINITY)
         val colors: List<Color> = listOf(
-            Color(0xDDDADFD8),
-            Color(0xDDBEC9B9),
-            Color(0xDDBEE2B4),
-            Color(0xDDB1DFA4),
-            Color(0xDDA9E498),
+            Color(0xDDE4EBE2),
+            Color(0xDDE3E9E2),
+            Color(0xDDE4EBE2),
+            Color(0xDDD2DAD0),
         )
         return ColorsContainer(
             ColorsContainer.Type.GRADIENT,
-            systemTopUiColor = Color(0xDDDADFD8),
-            navBarColor = Color(0xDDA9E498),
+            systemTopUiColor = Color(0xDDE4EBE2),
+            navBarColor = Color(0xDDD2DAD0),
             uiGradient = Brush.linearGradient(
                 colors = colors,
                 start = Offset.Zero,

@@ -4,12 +4,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.BottomAppBar
-import androidx.compose.material.BottomSheetScaffold
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.*
 import androidx.compose.material.MaterialTheme.colors
-import androidx.compose.material.Scaffold
-import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
@@ -19,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.barinov.simpleplayer.ui.theme.primary_color
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-
 @Composable
 fun PlayerTheme() {
     val provider = staticCompositionLocalOf<ScreenProvider> { error("NotProvided") }
@@ -52,10 +47,12 @@ fun PlayerTheme() {
 fun Host(provider: ProvidableCompositionLocal<ScreenProvider>) {
     val scaffoldState = rememberScaffoldState()
     val navState = rememberNavController()
+    val snackBarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         scaffoldState = scaffoldState,
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = {SnackbarHost(hostState = snackBarHostState)},
         topBar = {
             AnimatedVisibility(
                 visible = checkTopBarVisibility(provider.current.currentScreen.value),
@@ -79,6 +76,7 @@ fun Host(provider: ProvidableCompositionLocal<ScreenProvider>) {
 //        backgroundColor = provider.current.currentScreen.value.backgroundContainer.gradient,
         content = {
             NavigationHost(
+                snackBarHostState,
                 navState,
                 Pair(it.calculateBottomPadding(), it.calculateTopPadding()),
                 provider.current

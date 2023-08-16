@@ -1,5 +1,6 @@
 package com.barinov.simpleplayer.ui
 
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.unit.Dp
@@ -18,6 +19,7 @@ const val playListSelectedKey = "play_list_click"
 
 @Composable
 fun NavigationHost(
+    snackBarState: SnackbarHostState,
     navController: NavHostController,
     paddings: Pair<Dp, Dp>,
     menuProvider: ScreenProvider,
@@ -43,6 +45,7 @@ fun NavigationHost(
 
         composable(Screen.ScreenRegister.SCAN.name){
             ScanScreen(
+                snackBarState,
                 navController = navController,
                 menuProvider = menuProvider
             ,)
