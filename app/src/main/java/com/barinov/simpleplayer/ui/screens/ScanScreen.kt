@@ -6,27 +6,53 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Checkbox
 import androidx.compose.material.CheckboxDefaults
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
-import androidx.compose.runtime.*
+import androidx.compose.material.TextFieldColors
+import androidx.compose.material.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,13 +72,15 @@ import com.barinov.simpleplayer.ui.Screen
 import com.barinov.simpleplayer.ui.ScreenProvider
 import com.barinov.simpleplayer.ui.components.TopBarBackButton
 import com.barinov.simpleplayer.ui.components.items.SimpleScannedItem
+import com.barinov.simpleplayer.ui.theme.action_color
 import com.barinov.simpleplayer.ui.theme.path_card_color
 import com.barinov.simpleplayer.ui.theme.pb_color
+import com.barinov.simpleplayer.ui.theme.primary_color
+import com.barinov.simpleplayer.ui.theme.top_bar_color
 import com.barinov.simpleplayer.ui.uiModels.SelectableSearchedItem
 import com.barinov.simpleplayer.ui.viewModels.ScanViewModel
 import org.koin.androidx.compose.getViewModel
 import java.util.UUID
-import kotlin.contracts.contract
 
 
 const val PATH_KEY = "path"
@@ -123,20 +151,6 @@ fun ScanScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
 
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(top = 8.dp),
-//                horizontalArrangement = Arrangement.Center
-//            ) {
-//
-//                Text(
-//                    text = "Scan for music",
-//                    maxLines = 1,
-//                    fontSize = 22.sp,
-//                )
-//            }
-//            Spacer(modifier = Modifier.height(16.dp))
 
             PlayListNameField(playlistName, events)
 
@@ -182,15 +196,11 @@ private fun ScanScreenButtonsBlock(
             .padding(end = 16.dp),
         horizontalArrangement = Arrangement.End
     ) {
-//                Button(
-//                    onClick = { dialogExtender.value = false },
-//                    enabled = getButtonAccessByState(events.value)
-//                ) {
-//                    Text(text = stringResource(id = android.R.string.cancel))
-//                }
+
         Spacer(modifier = Modifier.width(26.dp))
 
         Button(
+            colors = ButtonDefaults.buttonColors(backgroundColor = action_color),
             onClick = {
                 when (events.value) {
                     is FileWorker.FileWorkEvents.Error -> {}
@@ -211,11 +221,17 @@ private fun ScanScreenButtonsBlock(
             },
             enabled = getButtonAccessByState(events.value)
         ) {
-            if (events.value is FileWorker.FileWorkEvents.Idle || events.value is FileWorker.FileWorkEvents.NoMusicFound) {
-                Text(text = stringResource(id = R.string.start_scan))
-            } else {
-                Text(text = stringResource(id = android.R.string.ok))
-            }
+            Text(
+                modifier = Modifier.padding(5.dp),
+                color = Color.White,
+                style = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 20.sp
+                ),
+                text = if (events.value is FileWorker.FileWorkEvents.Idle)
+                    stringResource(id = R.string.start_scan) else
+                    stringResource(id = android.R.string.ok)
+            )
         }
 
     }
@@ -389,7 +405,6 @@ private fun PickPathComponent(
         ) {
             Text(
                 modifier = Modifier.padding(start = 16.dp),
-//                            enabled = events.value is FileWorker.FileWorkEvents.Idle,
                 text = searchPath.value.extractPath().ellipsizePath(12),
                 maxLines = 2,
                 fontSize = 22.sp,
@@ -427,17 +442,29 @@ private fun PlayListNameField(
     playlistName: MutableState<String>,
     events: State<FileWorker.FileWorkEvents>
 ) {
-    TextField(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        label = { Text(text = "PlaylistName") },
-        singleLine = true,
-        value = playlistName.value,
-        enabled = events.value is FileWorker.FileWorkEvents.Idle || events.value is FileWorker.FileWorkEvents.NoMusicFound,
-        onValueChange = {
-            playlistName.value = it
-        })
+    val mCustomTextSelectionColors = TextSelectionColors(
+        handleColor = primary_color,
+        backgroundColor = primary_color
+    )
+    CompositionLocalProvider(LocalTextSelectionColors provides mCustomTextSelectionColors) {
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            label = { Text(text = "Playlist name", color = top_bar_color) },
+            singleLine = true,
+            value = playlistName.value,
+            enabled = events.value is FileWorker.FileWorkEvents.Idle,
+            onValueChange = {
+                playlistName.value = it
+            },
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                cursorColor = primary_color,
+                focusedBorderColor = primary_color,
+                unfocusedBorderColor = top_bar_color
+            ),
+        )
+    }
 }
 
 private fun onScreenEnter(
