@@ -16,6 +16,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.Checkbox
 import androidx.compose.material.CheckboxDefaults
 import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.*
@@ -58,6 +59,7 @@ const val PATH_KEY = "path"
 
 @Composable
 fun ScanScreen(
+    snackBarState: SnackbarHostState,
     navController: NavHostController,
     menuProvider: ScreenProvider,
 ) {
