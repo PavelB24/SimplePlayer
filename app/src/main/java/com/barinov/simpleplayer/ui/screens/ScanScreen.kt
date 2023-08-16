@@ -32,8 +32,6 @@ import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.material.TextFieldColors
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -57,7 +55,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.util.toAndroidXPair
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.barinov.simpleplayer.R
